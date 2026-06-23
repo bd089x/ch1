@@ -17,10 +17,24 @@ export default function Home() {
             onClick: handleNewNote
         },
         {
-            label: "Home",
-            onClick: () => navigate("/")
+            label: "Settings",
+            onClick: () => navigate("/settings")
         }
     ];
+
+    const formatDate = (timestamp) => {
+        if (!timestamp) return "";
+
+        const date = new Date(timestamp);
+
+        return date.toLocaleString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    };
 
     return (
         <div className="w-full p-4">
@@ -30,11 +44,7 @@ export default function Home() {
             <div className="flex flex-col gap-2">
 
                 {notes.map(note => {
-
                     const title = note.title?.trim() || "Untitled";
-
-                    const preview =
-                        note.content?.split("\n")[0]?.trim() || "";
 
                     return (
                         <button
@@ -46,11 +56,9 @@ export default function Home() {
                                 {title}
                             </span>
 
-                            {preview && (
-                                <span className="text-xs opacity-60">
-                                    {preview}
-                                </span>
-                            )}
+                            <span className="text-xs opacity-60">
+                                Updated: {formatDate(note.updatedAt)}
+                            </span>
                         </button>
                     );
                 })}

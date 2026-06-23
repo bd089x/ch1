@@ -31,20 +31,24 @@ export function getNote(id) {
 }
 
 /**
- * Create note (schema-based)
+ * CREATE NOTE (NOW FLEXIBLE)
+ *
+ * - UI usage: createNote()
+ * - Import usage: createNote({ title, content, createdAt, updatedAt })
  */
-export function createNote() {
+export function createNote(data = {}) {
     const notes = loadNotes();
 
     const now = Date.now();
 
     const newNote = {
-        id: now,
-        title: "Untitled",
-        content: "",
+        id: data.id ?? now,
 
-        createdAt: now,
-        updatedAt: now
+        title: data.title ?? "Untitled",
+        content: data.content ?? "",
+
+        createdAt: data.createdAt ?? now,
+        updatedAt: data.updatedAt ?? now
     };
 
     notes.unshift(newNote);
@@ -54,7 +58,7 @@ export function createNote() {
 }
 
 /**
- * Update note (schema-safe merge)
+ * Update note
  */
 export function updateNote(id, data) {
     const notes = loadNotes();

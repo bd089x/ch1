@@ -12,6 +12,7 @@
   "dependencies": {
     "daisyui": "^5.5.23",
     "dexie": "^4.4.4",
+    "jszip": "^3.10.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-markdown": "^10.1.0",

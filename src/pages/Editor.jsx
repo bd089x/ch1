@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+import TopMenu from "../components/TopMenu";
 import { getNote, createNote, updateNote } from "../hooks/useNotes";
 
 export default function Editor() {
@@ -38,27 +39,22 @@ export default function Editor() {
         });
     };
 
+    const menuActions = [
+        {
+            label: "Save",
+            onClick: handleSave
+        },
+        {
+            label: "Back",
+            onClick: () => navigate("/")
+        }
+    ];
+
     return (
         <div className="flex flex-col h-screen p-4 gap-4">
 
-            {/* Top Bar */}
-            <div className="flex gap-2">
-
-                <button
-                    className="btn btn-success"
-                    onClick={handleSave}
-                >
-                    Save
-                </button>
-
-                <button
-                    className="btn btn-ghost"
-                    onClick={() => navigate("/")}
-                >
-                    Back
-                </button>
-
-            </div>
+            {/* Top Menu */}
+            <TopMenu actions={menuActions} />
 
             {/* Title Input */}
             <input
