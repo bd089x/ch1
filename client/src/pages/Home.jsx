@@ -106,10 +106,6 @@ export default function Home() {
 
     const menuActions = [
         {
-            label: "New",
-            onClick: handleNewNote
-        },
-        {
             label: `Date ${sortMode.startsWith("updated") ? (sortDir === "desc" ? "↓" : "↑") : ""}`,
             onClick: toggleDateSort
         },
@@ -120,7 +116,11 @@ export default function Home() {
         {
             label: "Settings",
             onClick: () => navigate("/settings")
-        }
+        },
+        {
+            label: "New",
+            onClick: handleNewNote
+        },
     ];
 
     const formatDate = (timestamp) => {

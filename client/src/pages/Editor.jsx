@@ -88,16 +88,16 @@ export default function Editor() {
 
     const menuActions = [
         {
+            label: "Delete",
+            onClick: () => navigate(`/delete/${id}`)
+        },
+        {
             label: "Save",
             onClick: handleSave
         },
         {
             label: "Back",
             onClick: () => navigate("/")
-        },
-        {
-            label: "Delete",
-            onClick: () => navigate(`/delete/${id}`)
         }
     ];
 

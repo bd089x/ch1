@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Editor from "./pages/Editor";
 import Settings from "./pages/Settings";
 import Delete from "./pages/Delete";
+import Reset from "./pages/Reset";
 
 import LoadingOverlay from "./components/LoadingOverlay";
 
@@ -38,6 +39,12 @@ export default function App() {
                 <Route
                     path="/settings"
                     element={<Settings />}
+                />
+
+                {/* RESET / DANGER ZONE */}
+                <Route
+                    path="/reset"
+                    element={<Reset />}
                 />
 
             </Routes>

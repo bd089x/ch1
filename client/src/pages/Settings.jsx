@@ -66,8 +66,6 @@ export default function Settings() {
             notes.forEach(note => {
                 const originalName = sanitize(note.title) || "Untitled";
 
-                // Duplicate detection is case-insensitive,
-                // but exported filenames preserve capitalization.
                 const key = originalName.toLowerCase();
 
                 if (!(key in nameCount)) {
@@ -175,6 +173,7 @@ export default function Settings() {
 
             <div className="flex flex-col gap-3">
 
+                {/* EXPORT */}
                 <button
                     onClick={handleExport}
                     className="btn btn-outline w-full flex flex-col items-start text-left"
@@ -188,6 +187,7 @@ export default function Settings() {
                     </span>
                 </button>
 
+                {/* IMPORT */}
                 <label className="btn btn-outline w-full flex flex-col items-start text-left cursor-pointer">
                     <span className="font-medium">
                         Import Notes (.txt files)
@@ -205,6 +205,20 @@ export default function Settings() {
                         onChange={handleImport}
                     />
                 </label>
+
+                {/* RESET */}
+                <button
+                    onClick={() => navigate("/reset")}
+                    className="btn btn-outline w-full flex flex-col items-start text-left border-red-500/50 hover:border-red-500"
+                >
+                    <span className="font-medium text-red-500">
+                        Reset App
+                    </span>
+
+                    <span className="text-xs opacity-60">
+                        Permanently delete all notes and restore the app to a clean state. This action requires confirmation.
+                    </span>
+                </button>
 
             </div>
 

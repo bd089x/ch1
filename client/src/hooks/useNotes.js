@@ -171,3 +171,20 @@ export async function deleteNote(id) {
         request.onerror = () => reject(request.error);
     });
 }
+
+/**
+ * DELETE ALL NOTES
+ */
+export async function deleteAllNotes() {
+    const db = await openDB();
+
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+
+        const request = store.clear();
+
+        request.onsuccess = () => resolve(true);
+        request.onerror = () => reject(request.error);
+    });
+}
