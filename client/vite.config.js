@@ -5,7 +5,7 @@ import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   // 👇 IMPORTANT: match your GitHub repo name
-  base: "/ch1/",
+  base: "/ch1",
 
   plugins: [
     react(),
@@ -29,8 +29,8 @@ export default defineConfig({
         scope: ".",
 
         display: "standalone",
-        background_color: "#0f0f0f",
-        theme_color: "#0f0f0f",
+        background_color: "#000000",
+        theme_color: "#000000",
         orientation: "portrait",
 
         icons: [

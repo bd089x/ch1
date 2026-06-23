@@ -4,6 +4,11 @@ import { getAllNotes, createNote } from "../hooks/useNotes";
 import TopMenu from "../components/TopMenu";
 import { useLoading } from "../context/LoadingContext";
 
+/**
+ * LOCALSTORAGE KEY
+ */
+const SORT_KEY = "chalk-sort-mode";
+
 export default function Home() {
     const navigate = useNavigate();
     const { showLoading, hideLoading } = useLoading();
@@ -11,12 +16,23 @@ export default function Home() {
     const [notes, setNotes] = useState([]);
 
     /**
-     * SORT STATE
+     * SORT STATE (hydrated from localStorage)
      */
-    const [sortMode, setSortMode] = useState("updated-desc");
-    const [sortDir, setSortDir] = useState("desc");
-    // desc = newest / Z-A
-    // asc = oldest / A-Z
+    const [sortMode, setSortMode] = useState(() => {
+        return localStorage.getItem(SORT_KEY) || "updated-desc";
+    });
+
+    const [sortDir, setSortDir] = useState(() => {
+        const saved = localStorage.getItem(SORT_KEY) || "updated-desc";
+        return saved.endsWith("asc") ? "asc" : "desc";
+    });
+
+    /**
+     * SAVE SORT MODE TO LOCALSTORAGE
+     */
+    const persistSort = (mode) => {
+        localStorage.setItem(SORT_KEY, mode);
+    };
 
     /**
      * LOAD NOTES (whenever sort changes)
@@ -55,33 +71,37 @@ export default function Home() {
      * SORT HELPERS
      */
     const toggleDateSort = () => {
+        let next;
+
         if (sortMode.startsWith("updated")) {
-            const next =
+            next =
                 sortMode === "updated-desc"
                     ? "updated-asc"
                     : "updated-desc";
-
-            setSortMode(next);
-            setSortDir(next.endsWith("asc") ? "asc" : "desc");
         } else {
-            setSortMode("updated-desc");
-            setSortDir("desc");
+            next = "updated-desc";
         }
+
+        setSortMode(next);
+        setSortDir(next.endsWith("asc") ? "asc" : "desc");
+        persistSort(next);
     };
 
     const toggleTitleSort = () => {
+        let next;
+
         if (sortMode.startsWith("title")) {
-            const next =
+            next =
                 sortMode === "title-asc"
                     ? "title-desc"
                     : "title-asc";
-
-            setSortMode(next);
-            setSortDir(next.endsWith("asc") ? "asc" : "desc");
         } else {
-            setSortMode("title-asc");
-            setSortDir("asc");
+            next = "title-asc";
         }
+
+        setSortMode(next);
+        setSortDir(next.endsWith("asc") ? "asc" : "desc");
+        persistSort(next);
     };
 
     const menuActions = [
@@ -106,9 +126,7 @@ export default function Home() {
     const formatDate = (timestamp) => {
         if (!timestamp) return "";
 
-        const date = new Date(timestamp);
-
-        return date.toLocaleString(undefined, {
+        return new Date(timestamp).toLocaleString(undefined, {
             year: "numeric",
             month: "short",
             day: "numeric",

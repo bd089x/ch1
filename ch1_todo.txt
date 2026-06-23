@@ -6,4 +6,5 @@
 - fix the zipfile to use a timestamp for the title ❤️
 - build tests to keep our functionality from drifting
 - create a loading spinner context ❤️
-- create a local storage that keeps tabs on file organization
+- create a local storage that keeps tabs on file organization ❤️
+- fix manifest start colors full black ❤️
