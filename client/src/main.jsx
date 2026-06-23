@@ -6,6 +6,7 @@ import App from "./App";
 import "./styles/index.css";
 
 import { registerSW } from "virtual:pwa-register";
+import { LoadingProvider } from "./context/LoadingContext";
 
 registerSW({
   immediate: true
@@ -14,7 +15,9 @@ registerSW({
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter basename="/ch1">
-      <App />
+      <LoadingProvider>
+        <App/>
+      </LoadingProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

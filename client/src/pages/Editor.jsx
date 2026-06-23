@@ -3,32 +3,47 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import TopMenu from "../components/TopMenu";
 import { getNote, createNote, updateNote } from "../hooks/useNotes";
+import { useLoading } from "../context/LoadingContext";
 
 export default function Editor() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { loading, showLoading, hideLoading } = useLoading();
 
     const [note, setNote] = useState(null);
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
 
     /**
-     * LOAD OR CREATE NOTE (ASYNC FIX)
+     * LOAD OR CREATE NOTE
      */
     useEffect(() => {
         const load = async () => {
             if (id === "new") {
-                const newNote = await createNote();
-                navigate(`/note/${newNote.id}`, { replace: true });
+                showLoading("Creating note...");
+
+                try {
+                    const newNote = await createNote();
+                    navigate(`/note/${newNote.id}`, { replace: true });
+                } finally {
+                    hideLoading();
+                }
+
                 return;
             }
 
-            const existing = await getNote(id);
+            showLoading("Opening note...");
 
-            if (existing) {
-                setNote(existing);
-                setTitle(existing.title || "");
-                setContent(existing.content || "");
+            try {
+                const existing = await getNote(id);
+
+                if (existing) {
+                    setNote(existing);
+                    setTitle(existing.title || "");
+                    setContent(existing.content || "");
+                }
+            } finally {
+                hideLoading();
             }
         };
 
@@ -41,14 +56,22 @@ export default function Editor() {
     const handleSave = async () => {
         if (!note) return;
 
-        await updateNote(note.id, {
-            title: title.trim() || "Untitled",
-            content
-        });
+        showLoading("Saving note...");
+
+        try {
+            await updateNote(note.id, {
+                title: title.trim() || "Untitled",
+                content
+            });
+        } finally {
+            hideLoading();
+        }
     };
 
     /**
      * AUTO SAVE (debounced)
+     *
+     * No loading overlay here to avoid interrupting typing.
      */
     useEffect(() => {
         if (!note) return;
@@ -81,10 +104,8 @@ export default function Editor() {
     return (
         <div className="flex flex-col h-screen p-4 gap-4">
 
-            {/* Top Menu */}
             <TopMenu actions={menuActions} />
 
-            {/* Title */}
             <input
                 className="
                     w-full
@@ -100,9 +121,9 @@ export default function Editor() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Title..."
+                disabled={loading}
             />
 
-            {/* Content */}
             <textarea
                 className="
                     flex-1
@@ -119,6 +140,7 @@ export default function Editor() {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Start writing..."
+                disabled={loading}
             />
 
         </div>

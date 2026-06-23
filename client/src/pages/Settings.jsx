@@ -3,9 +3,12 @@ import JSZip from "jszip";
 import TopMenu from "../components/TopMenu";
 import { getAllNotes, createNote } from "../hooks/useNotes";
 import { useEffect, useState } from "react";
+import { useLoading } from "../context/LoadingContext";
 
 export default function Settings() {
     const navigate = useNavigate();
+    const { showLoading, hideLoading } = useLoading();
+
     const [notes, setNotes] = useState([]);
 
     /**
@@ -13,8 +16,14 @@ export default function Settings() {
      */
     useEffect(() => {
         const load = async () => {
-            const data = await getAllNotes();
-            setNotes(data);
+            showLoading("Loading settings...");
+
+            try {
+                const data = await getAllNotes();
+                setNotes(data);
+            } finally {
+                hideLoading();
+            }
         };
 
         load();
@@ -24,85 +33,121 @@ export default function Settings() {
      * SANITIZE FILE NAME
      */
     const sanitize = (name) =>
-        (name || "untitled")
+        (name || "Untitled")
             .replace(/[^a-z0-9\s]/gi, "")
             .trim();
+
+    /**
+     * CREATE ZIP TIMESTAMP
+     */
+    const getTimestamp = () => {
+        const now = new Date();
+
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        const hours = String(now.getHours()).padStart(2, "0");
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+        const seconds = String(now.getSeconds()).padStart(2, "0");
+
+        return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+    };
 
     /**
      * EXPORT
      */
     const handleExport = async () => {
-        const zip = new JSZip();
-        const nameCount = {};
+        showLoading("Exporting notes...");
 
-        notes.forEach(note => {
-            let baseName = sanitize(note.title).toLowerCase() || "untitled";
+        try {
+            const zip = new JSZip();
+            const nameCount = {};
 
-            if (!nameCount[baseName]) {
-                nameCount[baseName] = 0;
-            } else {
-                nameCount[baseName] += 1;
-            }
+            notes.forEach(note => {
+                const originalName = sanitize(note.title) || "Untitled";
 
-            const suffix =
-                nameCount[baseName] === 0
-                    ? ""
-                    : ` (${nameCount[baseName]})`;
+                // Duplicate detection is case-insensitive,
+                // but exported filenames preserve capitalization.
+                const key = originalName.toLowerCase();
 
-            const filename = `${baseName}${suffix}.txt`;
+                if (!(key in nameCount)) {
+                    nameCount[key] = 0;
+                } else {
+                    nameCount[key]++;
+                }
 
-            zip.file(filename, note.content || "");
-        });
+                const suffix =
+                    nameCount[key] === 0
+                        ? ""
+                        : ` (${nameCount[key]})`;
 
-        const blob = await zip.generateAsync({ type: "blob" });
+                const filename = `${originalName}${suffix}.txt`;
 
-        const url = URL.createObjectURL(blob);
+                zip.file(filename, note.content || "");
+            });
 
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "chalk-notes.zip";
-        a.click();
+            const blob = await zip.generateAsync({ type: "blob" });
 
-        URL.revokeObjectURL(url);
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `chalk-notes-${getTimestamp()}.zip`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+        } finally {
+            hideLoading();
+        }
     };
 
     /**
      * IMPORT
      */
-    const handleImport = (event) => {
+    const handleImport = async (event) => {
         const files = Array.from(event.target.files || []);
         if (!files.length) return;
 
-        files.forEach(file => {
-            const reader = new FileReader();
+        showLoading("Importing notes...");
 
-            reader.onload = async (e) => {
-                const content = e.target.result || "";
+        try {
+            await Promise.all(
+                files.map(file => {
+                    return new Promise((resolve) => {
+                        const reader = new FileReader();
 
-                const title = file.name
-                    .replace(".txt", "")
-                    .replace(/_/g, " ")
-                    .trim();
+                        reader.onload = async (e) => {
+                            const content = e.target.result || "";
 
-                const now = Date.now();
+                            const title = file.name
+                                .replace(/\.txt$/i, "")
+                                .replace(/_/g, " ")
+                                .trim();
 
-                await createNote({
-                    title: title || "Imported Note",
-                    content: content.trim(),
-                    createdAt: now,
-                    updatedAt: now
-                });
-            };
+                            const now = Date.now();
 
-            reader.readAsText(file);
-        });
+                            await createNote({
+                                title: title || "Imported Note",
+                                content: content.trim(),
+                                createdAt: now,
+                                updatedAt: now
+                            });
 
-        alert("Import complete!");
+                            resolve();
+                        };
 
-        setTimeout(async () => {
+                        reader.readAsText(file);
+                    });
+                })
+            );
+
             const updated = await getAllNotes();
             setNotes(updated);
-        }, 300);
+
+            alert("Import complete!");
+        } finally {
+            hideLoading();
+        }
     };
 
     const menuActions = [
@@ -128,10 +173,8 @@ export default function Settings() {
 
             <TopMenu actions={menuActions} />
 
-            {/* LIST STYLE SETTINGS (like Home) */}
             <div className="flex flex-col gap-3">
 
-                {/* EXPORT ROW */}
                 <button
                     onClick={handleExport}
                     className="btn btn-outline w-full flex flex-col items-start text-left"
@@ -145,7 +188,6 @@ export default function Settings() {
                     </span>
                 </button>
 
-                {/* IMPORT ROW */}
                 <label className="btn btn-outline w-full flex flex-col items-start text-left cursor-pointer">
                     <span className="font-medium">
                         Import Notes (.txt files)

@@ -1,4 +1,9 @@
-- fix icon to be black square
+- fix icon to be black square ❤️
 - add delete page ❤️
-- fix import and export to be to the left, with subtext like home list items
-- create a build folder named dev for gh-pages hosting
+- fix import and export to be to the left, with subtext like home list items ❤️
+- create a build folder named dev for gh-pages hosting ❤️
+- fix import to exports just as the titles displayed ❤️
+- fix the zipfile to use a timestamp for the title ❤️
+- build tests to keep our functionality from drifting
+- create a loading spinner context ❤️
+- create a local storage that keeps tabs on file organization

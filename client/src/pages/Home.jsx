@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAllNotes, createNote } from "../hooks/useNotes";
 import TopMenu from "../components/TopMenu";
+import { useLoading } from "../context/LoadingContext";
 
 export default function Home() {
     const navigate = useNavigate();
+    const { showLoading, hideLoading } = useLoading();
 
     const [notes, setNotes] = useState([]);
 
@@ -12,7 +14,7 @@ export default function Home() {
      * SORT STATE
      */
     const [sortMode, setSortMode] = useState("updated-desc");
-    const [sortDir, setSortDir] = useState("desc"); 
+    const [sortDir, setSortDir] = useState("desc");
     // desc = newest / Z-A
     // asc = oldest / A-Z
 
@@ -21,8 +23,14 @@ export default function Home() {
      */
     useEffect(() => {
         const load = async () => {
-            const data = await getAllNotes(sortMode);
-            setNotes(data);
+            showLoading("Loading notes...");
+
+            try {
+                const data = await getAllNotes(sortMode);
+                setNotes(data);
+            } finally {
+                hideLoading();
+            }
         };
 
         load();
@@ -32,9 +40,15 @@ export default function Home() {
      * NEW NOTE
      */
     const handleNewNote = async () => {
-        const note = await createNote();
-        setNotes(prev => [note, ...prev]);
-        navigate(`/note/${note.id}`);
+        showLoading("Creating note...");
+
+        try {
+            const note = await createNote();
+            setNotes(prev => [note, ...prev]);
+            navigate(`/note/${note.id}`);
+        } finally {
+            hideLoading();
+        }
     };
 
     /**
