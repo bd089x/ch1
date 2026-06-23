@@ -14,12 +14,12 @@ function openDB() {
 
             if (!db.objectStoreNames.contains(STORE_NAME)) {
                 const store = db.createObjectStore(STORE_NAME, {
-                    keyPath: "id"
+                    keyPath: "note_id"
                 });
 
-                store.createIndex("updatedAt", "updatedAt");
-                store.createIndex("title", "title");
-                store.createIndex("createdAt", "createdAt");
+                store.createIndex("note_updated_at", "note_updated_at");
+                store.createIndex("note_title", "note_title");
+                store.createIndex("note_created_at", "note_created_at");
             }
         };
 
@@ -30,12 +30,6 @@ function openDB() {
 
 /**
  * GET ALL NOTES (WITH SORTING OPTIONS)
- *
- * sort options:
- * - "updated-desc" (default)
- * - "updated-asc"
- * - "title-asc"
- * - "title-desc"
  */
 export async function getAllNotes(sort = "updated-desc") {
     const db = await openDB();
@@ -52,19 +46,19 @@ export async function getAllNotes(sort = "updated-desc") {
             const sorted = [...data].sort((a, b) => {
                 switch (sort) {
                     case "updated-asc":
-                        return (a.updatedAt || 0) - (b.updatedAt || 0);
+                        return (a.note_updated_at || 0) - (b.note_updated_at || 0);
 
                     case "updated-desc":
-                        return (b.updatedAt || 0) - (a.updatedAt || 0);
+                        return (b.note_updated_at || 0) - (a.note_updated_at || 0);
 
                     case "title-asc":
-                        return (a.title || "").localeCompare(b.title || "");
+                        return (a.note_title || "").localeCompare(b.note_title || "");
 
                     case "title-desc":
-                        return (b.title || "").localeCompare(a.title || "");
+                        return (b.note_title || "").localeCompare(a.note_title || "");
 
                     default:
-                        return (b.updatedAt || 0) - (a.updatedAt || 0);
+                        return (b.note_updated_at || 0) - (a.note_updated_at || 0);
                 }
             });
 
@@ -85,7 +79,7 @@ export async function getNote(id) {
         const tx = db.transaction(STORE_NAME, "readonly");
         const store = tx.objectStore(STORE_NAME);
 
-        const request = store.get(Number(id));
+        const request = store.get(id);
 
         request.onsuccess = () => resolve(request.result || null);
         request.onerror = () => reject(request.error);
@@ -93,7 +87,7 @@ export async function getNote(id) {
 }
 
 /**
- * CREATE NOTE
+ * CREATE NOTE (single source of truth)
  */
 export async function createNote(data = {}) {
     const db = await openDB();
@@ -101,11 +95,13 @@ export async function createNote(data = {}) {
     const now = Date.now();
 
     const newNote = {
-        id: data.id ?? now,
-        title: data.title ?? "Untitled",
-        content: data.content ?? "",
-        createdAt: data.createdAt ?? now,
-        updatedAt: data.updatedAt ?? now
+        note_id: crypto.randomUUID(),
+
+        note_title: data.note_title ?? "Untitled",
+        note_content: data.note_content ?? "",
+
+        note_created_at: now,
+        note_updated_at: now
     };
 
     return new Promise((resolve, reject) => {
@@ -129,7 +125,7 @@ export async function updateNote(id, data) {
         const tx = db.transaction(STORE_NAME, "readwrite");
         const store = tx.objectStore(STORE_NAME);
 
-        const getReq = store.get(Number(id));
+        const getReq = store.get(id);
 
         getReq.onsuccess = () => {
             const existing = getReq.result;
@@ -141,8 +137,14 @@ export async function updateNote(id, data) {
 
             const updated = {
                 ...existing,
-                ...data,
-                updatedAt: Date.now()
+
+                note_title:
+                    data.note_title ?? existing.note_title,
+
+                note_content:
+                    data.note_content ?? existing.note_content,
+
+                note_updated_at: Date.now()
             };
 
             const putReq = store.put(updated);
@@ -165,7 +167,7 @@ export async function deleteNote(id) {
         const tx = db.transaction(STORE_NAME, "readwrite");
         const store = tx.objectStore(STORE_NAME);
 
-        const request = store.delete(Number(id));
+        const request = store.delete(id);
 
         request.onsuccess = () => resolve(true);
         request.onerror = () => reject(request.error);

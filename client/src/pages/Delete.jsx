@@ -29,9 +29,9 @@ export default function Delete() {
     const handleDelete = async () => {
         if (!note) return;
 
-        if (confirmText !== note.title) return;
+        if (confirmText !== note.note_title) return;
 
-        await deleteNote(note.id);
+        await deleteNote(note.note_id);
 
         navigate("/");
     };
@@ -51,7 +51,7 @@ export default function Delete() {
         );
     }
 
-    const canDelete = confirmText === note.title;
+    const canDelete = confirmText === note.note_title;
 
     return (
         <div className="p-4 flex flex-col gap-6">
@@ -60,7 +60,7 @@ export default function Delete() {
 
             {/* Title Display */}
             <div className="text-xl font-bold">
-                Delete: {note.title}
+                Delete: {note.note_title}
             </div>
 
             {/* Warning */}

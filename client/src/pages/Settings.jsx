@@ -64,7 +64,7 @@ export default function Settings() {
             const nameCount = {};
 
             notes.forEach(note => {
-                const originalName = sanitize(note.title) || "Untitled";
+                const originalName = sanitize(note.note_title) || "Untitled";
 
                 const key = originalName.toLowerCase();
 
@@ -81,7 +81,7 @@ export default function Settings() {
 
                 const filename = `${originalName}${suffix}.txt`;
 
-                zip.file(filename, note.content || "");
+                zip.file(filename, note.note_content || "");
             });
 
             const blob = await zip.generateAsync({ type: "blob" });
@@ -122,13 +122,9 @@ export default function Settings() {
                                 .replace(/_/g, " ")
                                 .trim();
 
-                            const now = Date.now();
-
                             await createNote({
-                                title: title || "Imported Note",
-                                content: content.trim(),
-                                createdAt: now,
-                                updatedAt: now
+                                note_title: title || "Imported Note",
+                                note_content: content.trim()
                             });
 
                             resolve();
@@ -142,7 +138,7 @@ export default function Settings() {
             const updated = await getAllNotes();
             setNotes(updated);
 
-            alert("Import complete!");
+            navigate("/");
         } finally {
             hideLoading();
         }
@@ -154,17 +150,6 @@ export default function Settings() {
             onClick: () => navigate("/")
         }
     ];
-
-    const formatDate = (ts) => {
-        if (!ts) return "";
-        return new Date(ts).toLocaleString(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit"
-        });
-    };
 
     return (
         <div className="p-4 flex flex-col gap-6">

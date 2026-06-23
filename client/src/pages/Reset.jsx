@@ -54,7 +54,7 @@ export default function Reset() {
                 This action cannot be undone.
             </div>
 
-            {/* Extra warning */}
+            {/* Confirmation instruction */}
             <div className="text-sm opacity-70">
                 Type <span className="font-bold text-white">DELETE ALL</span> to confirm.
             </div>

@@ -24,7 +24,7 @@ export default function Editor() {
 
                 try {
                     const newNote = await createNote();
-                    navigate(`/note/${newNote.id}`, { replace: true });
+                    navigate(`/note/${newNote.note_id}`, { replace: true });
                 } finally {
                     hideLoading();
                 }
@@ -39,8 +39,8 @@ export default function Editor() {
 
                 if (existing) {
                     setNote(existing);
-                    setTitle(existing.title || "");
-                    setContent(existing.content || "");
+                    setTitle(existing.note_title || "");
+                    setContent(existing.note_content || "");
                 }
             } finally {
                 hideLoading();
@@ -59,10 +59,17 @@ export default function Editor() {
         showLoading("Saving note...");
 
         try {
-            await updateNote(note.id, {
-                title: title.trim() || "Untitled",
-                content
+            await updateNote(note.note_id, {
+                note_title: title.trim() || "Untitled",
+                note_content: content
             });
+
+            // keep local state in sync
+            setNote(prev => ({
+                ...prev,
+                note_title: title.trim() || "Untitled",
+                note_content: content
+            }));
         } finally {
             hideLoading();
         }
@@ -70,16 +77,14 @@ export default function Editor() {
 
     /**
      * AUTO SAVE (debounced)
-     *
-     * No loading overlay here to avoid interrupting typing.
      */
     useEffect(() => {
         if (!note) return;
 
         const timer = setTimeout(() => {
-            updateNote(note.id, {
-                title: title.trim() || "Untitled",
-                content
+            updateNote(note.note_id, {
+                note_title: title.trim() || "Untitled",
+                note_content: content
             });
         }, 400);
 
@@ -89,7 +94,7 @@ export default function Editor() {
     const menuActions = [
         {
             label: "Delete",
-            onClick: () => navigate(`/delete/${id}`)
+            onClick: () => navigate(`/delete/${note?.note_id || id}`)
         },
         {
             label: "Save",

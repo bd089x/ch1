@@ -60,8 +60,10 @@ export default function Home() {
 
         try {
             const note = await createNote();
+
             setNotes(prev => [note, ...prev]);
-            navigate(`/note/${note.id}`);
+
+            navigate(`/note/${note.note_id}`);
         } finally {
             hideLoading();
         }
@@ -143,20 +145,20 @@ export default function Home() {
             <div className="flex flex-col gap-2">
 
                 {notes.map(note => {
-                    const title = note.title?.trim() || "Untitled";
+                    const title = note.note_title?.trim() || "Untitled";
 
                     return (
                         <button
-                            key={note.id}
+                            key={note.note_id}
                             className="btn btn-outline w-full justify-start flex flex-col items-start"
-                            onClick={() => navigate(`/note/${note.id}`)}
+                            onClick={() => navigate(`/note/${note.note_id}`)}
                         >
                             <span className="font-medium">
                                 {title}
                             </span>
 
                             <span className="text-xs opacity-60">
-                                Updated: {formatDate(note.updatedAt)}
+                                Updated: {formatDate(note.note_updated_at)}
                             </span>
                         </button>
                     );
