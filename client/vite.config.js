@@ -5,7 +5,7 @@ import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   // 👇 IMPORTANT: match your GitHub repo name
-  base: "/chalk/",
+  base: "/ch1/",
 
   plugins: [
     react(),
