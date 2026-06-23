@@ -13,7 +13,7 @@ registerSW({
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/ch1">
       <App />
     </BrowserRouter>
   </React.StrictMode>
