@@ -5,6 +5,8 @@ import { getAllNotes, createNote } from "../hooks/useNotes";
 import { useEffect, useState } from "react";
 import { useLoading } from "../context/LoadingContext";
 
+const BUILD_TIME = __BUILD_TIME__;
+
 export default function Settings() {
     const navigate = useNavigate();
     const { showLoading, hideLoading } = useLoading();
@@ -51,6 +53,20 @@ export default function Settings() {
         const seconds = String(now.getSeconds()).padStart(2, "0");
 
         return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+    };
+
+    /**
+     * FORMAT BUILD TIME
+     */
+    const formatBuildTime = (iso) => {
+        if (!iso) return "";
+        return new Date(iso).toLocaleString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
     };
 
     /**
@@ -103,10 +119,9 @@ export default function Settings() {
      * IMPORT
      */
     const handleImport = async (event) => {
+        showLoading("Importing notes...");
         const files = Array.from(event.target.files || []);
         if (!files.length) return;
-
-        showLoading("Importing notes...");
 
         try {
             await Promise.all(
@@ -205,6 +220,11 @@ export default function Settings() {
                     </span>
                 </button>
 
+            </div>
+
+            {/* BUILD INFO */}
+            <div className="text-xs opacity-40 text-center pt-6">
+                Built: {formatBuildTime(BUILD_TIME)}
             </div>
 
         </div>

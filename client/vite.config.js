@@ -7,6 +7,10 @@ export default defineConfig({
   // 👇 IMPORTANT: match your GitHub repo name
   base: "/ch1",
 
+  define: {
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString())
+  },
+
   plugins: [
     react(),
     tailwindcss(),
