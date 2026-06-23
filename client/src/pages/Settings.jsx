@@ -29,11 +29,10 @@ export default function Settings() {
             .trim();
 
     /**
-     * EXPORT: ONE FILE PER NOTE
+     * EXPORT
      */
     const handleExport = async () => {
         const zip = new JSZip();
-
         const nameCount = {};
 
         notes.forEach(note => {
@@ -68,7 +67,7 @@ export default function Settings() {
     };
 
     /**
-     * IMPORT FILES → INDEXEDDB
+     * IMPORT
      */
     const handleImport = (event) => {
         const files = Array.from(event.target.files || []);
@@ -100,7 +99,6 @@ export default function Settings() {
 
         alert("Import complete!");
 
-        // refresh UI after import
         setTimeout(async () => {
             const updated = await getAllNotes();
             setNotes(updated);
@@ -114,24 +112,49 @@ export default function Settings() {
         }
     ];
 
+    const formatDate = (ts) => {
+        if (!ts) return "";
+        return new Date(ts).toLocaleString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    };
+
     return (
         <div className="p-4 flex flex-col gap-6">
 
-            {/* Top Menu */}
             <TopMenu actions={menuActions} />
 
-            {/* Center Actions */}
-            <div className="flex flex-col items-center gap-4 w-full">
+            {/* LIST STYLE SETTINGS (like Home) */}
+            <div className="flex flex-col gap-3">
 
+                {/* EXPORT ROW */}
                 <button
-                    className="btn btn-primary w-full max-w-md"
                     onClick={handleExport}
+                    className="btn btn-outline w-full flex flex-col items-start text-left"
                 >
-                    Export Notes (.zip)
+                    <span className="font-medium">
+                        Export Notes (.zip)
+                    </span>
+
+                    <span className="text-xs opacity-60">
+                        Download all notes as individual .txt files inside a zip archive. Useful for backups or moving data between devices.
+                    </span>
                 </button>
 
-                <label className="btn btn-outline w-full max-w-md cursor-pointer text-center">
-                    Import Notes (.txt files)
+                {/* IMPORT ROW */}
+                <label className="btn btn-outline w-full flex flex-col items-start text-left cursor-pointer">
+                    <span className="font-medium">
+                        Import Notes (.txt files)
+                    </span>
+
+                    <span className="text-xs opacity-60">
+                        Upload one or more .txt files and convert them into notes stored locally on this device.
+                    </span>
+
                     <input
                         type="file"
                         accept=".txt"

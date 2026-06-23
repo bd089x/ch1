@@ -71,6 +71,10 @@ export default function Editor() {
         {
             label: "Back",
             onClick: () => navigate("/")
+        },
+        {
+            label: "Delete",
+            onClick: () => navigate(`/delete/${id}`)
         }
     ];
 
