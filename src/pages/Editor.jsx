@@ -9,7 +9,6 @@ export default function Editor() {
     const navigate = useNavigate();
 
     const [note, setNote] = useState(null);
-
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
 
@@ -30,6 +29,9 @@ export default function Editor() {
         }
     }, [id]);
 
+    /**
+     * MANUAL SAVE
+     */
     const handleSave = () => {
         if (!note) return;
 
@@ -38,6 +40,22 @@ export default function Editor() {
             content: content
         });
     };
+
+    /**
+     * AUTO SAVE (debounced)
+     */
+    useEffect(() => {
+        if (!note) return;
+
+        const timer = setTimeout(() => {
+            updateNote(note.id, {
+                title: title.trim() || "Untitled",
+                content: content
+            });
+        }, 400); // small delay to avoid excessive writes
+
+        return () => clearTimeout(timer);
+    }, [title, content, note]);
 
     const menuActions = [
         {
