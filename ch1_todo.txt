@@ -1,4 +1,4 @@
 - fix icon to be black square
-- add delete page
+- add delete page ❤️
 - fix import and export to be to the left, with subtext like home list items
 - create a build folder named dev for gh-pages hosting
