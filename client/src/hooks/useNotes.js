@@ -18,6 +18,8 @@ function openDB() {
                 });
 
                 store.createIndex("updatedAt", "updatedAt");
+                store.createIndex("title", "title");
+                store.createIndex("createdAt", "createdAt");
             }
         };
 
@@ -27,26 +29,15 @@ function openDB() {
 }
 
 /**
- * Helper: run transaction
+ * GET ALL NOTES (WITH SORTING OPTIONS)
+ *
+ * sort options:
+ * - "updated-desc" (default)
+ * - "updated-asc"
+ * - "title-asc"
+ * - "title-desc"
  */
-async function tx(mode, fn) {
-    const db = await openDB();
-
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORE_NAME, mode);
-        const store = transaction.objectStore(STORE_NAME);
-
-        const result = fn(store);
-
-        transaction.oncomplete = () => resolve(result);
-        transaction.onerror = () => reject(transaction.error);
-    });
-}
-
-/**
- * GET ALL NOTES
- */
-export async function getAllNotes() {
+export async function getAllNotes(sort = "updated-desc") {
     const db = await openDB();
 
     return new Promise((resolve, reject) => {
@@ -58,10 +49,26 @@ export async function getAllNotes() {
         request.onsuccess = () => {
             const data = request.result || [];
 
-            // newest first (same behavior you had)
-            data.sort((a, b) => b.updatedAt - a.updatedAt);
+            const sorted = [...data].sort((a, b) => {
+                switch (sort) {
+                    case "updated-asc":
+                        return (a.updatedAt || 0) - (b.updatedAt || 0);
 
-            resolve(data);
+                    case "updated-desc":
+                        return (b.updatedAt || 0) - (a.updatedAt || 0);
+
+                    case "title-asc":
+                        return (a.title || "").localeCompare(b.title || "");
+
+                    case "title-desc":
+                        return (b.title || "").localeCompare(a.title || "");
+
+                    default:
+                        return (b.updatedAt || 0) - (a.updatedAt || 0);
+                }
+            });
+
+            resolve(sorted);
         };
 
         request.onerror = () => reject(request.error);
@@ -118,7 +125,7 @@ export async function createNote(data = {}) {
 export async function updateNote(id, data) {
     const db = await openDB();
 
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, "readwrite");
         const store = tx.objectStore(STORE_NAME);
 
@@ -145,5 +152,22 @@ export async function updateNote(id, data) {
         };
 
         getReq.onerror = () => reject(getReq.error);
+    });
+}
+
+/**
+ * DELETE NOTE
+ */
+export async function deleteNote(id) {
+    const db = await openDB();
+
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+
+        const request = store.delete(Number(id));
+
+        request.onsuccess = () => resolve(true);
+        request.onerror = () => reject(request.error);
     });
 }

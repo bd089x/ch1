@@ -9,27 +9,79 @@ export default function Home() {
     const [notes, setNotes] = useState([]);
 
     /**
-     * LOAD NOTES (async from IndexedDB)
+     * SORT STATE
+     */
+    const [sortMode, setSortMode] = useState("updated-desc");
+    const [sortDir, setSortDir] = useState("desc"); 
+    // desc = newest / Z-A
+    // asc = oldest / A-Z
+
+    /**
+     * LOAD NOTES (whenever sort changes)
      */
     useEffect(() => {
         const load = async () => {
-            const data = await getAllNotes();
+            const data = await getAllNotes(sortMode);
             setNotes(data);
         };
 
         load();
-    }, []);
+    }, [sortMode]);
 
+    /**
+     * NEW NOTE
+     */
     const handleNewNote = async () => {
         const note = await createNote();
         setNotes(prev => [note, ...prev]);
         navigate(`/note/${note.id}`);
     };
 
+    /**
+     * SORT HELPERS
+     */
+    const toggleDateSort = () => {
+        if (sortMode.startsWith("updated")) {
+            const next =
+                sortMode === "updated-desc"
+                    ? "updated-asc"
+                    : "updated-desc";
+
+            setSortMode(next);
+            setSortDir(next.endsWith("asc") ? "asc" : "desc");
+        } else {
+            setSortMode("updated-desc");
+            setSortDir("desc");
+        }
+    };
+
+    const toggleTitleSort = () => {
+        if (sortMode.startsWith("title")) {
+            const next =
+                sortMode === "title-asc"
+                    ? "title-desc"
+                    : "title-asc";
+
+            setSortMode(next);
+            setSortDir(next.endsWith("asc") ? "asc" : "desc");
+        } else {
+            setSortMode("title-asc");
+            setSortDir("asc");
+        }
+    };
+
     const menuActions = [
         {
             label: "New",
             onClick: handleNewNote
+        },
+        {
+            label: `Date ${sortMode.startsWith("updated") ? (sortDir === "desc" ? "↓" : "↑") : ""}`,
+            onClick: toggleDateSort
+        },
+        {
+            label: `Title ${sortMode.startsWith("title") ? (sortDir === "desc" ? "↓" : "↑") : ""}`,
+            onClick: toggleTitleSort
         },
         {
             label: "Settings",
