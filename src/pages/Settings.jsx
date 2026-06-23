@@ -1,18 +1,24 @@
-import { createNote } from "../hooks/useNotes";
 import { useNavigate } from "react-router-dom";
 import JSZip from "jszip";
 import TopMenu from "../components/TopMenu";
+import { getAllNotes, createNote } from "../hooks/useNotes";
+import { useEffect, useState } from "react";
 
 export default function Settings() {
     const navigate = useNavigate();
+    const [notes, setNotes] = useState([]);
 
     /**
-     * ALWAYS FRESH READ (fixes blank export)
+     * LOAD FROM INDEXEDDB
      */
-    function loadNotesFresh() {
-        const raw = localStorage.getItem("chalk-notes");
-        return raw ? JSON.parse(raw) : [];
-    }
+    useEffect(() => {
+        const load = async () => {
+            const data = await getAllNotes();
+            setNotes(data);
+        };
+
+        load();
+    }, []);
 
     /**
      * SANITIZE FILE NAME
@@ -26,7 +32,6 @@ export default function Settings() {
      * EXPORT: ONE FILE PER NOTE
      */
     const handleExport = async () => {
-        const notes = loadNotesFresh();
         const zip = new JSZip();
 
         const nameCount = {};
@@ -63,7 +68,7 @@ export default function Settings() {
     };
 
     /**
-     * IMPORT FILES
+     * IMPORT FILES → INDEXEDDB
      */
     const handleImport = (event) => {
         const files = Array.from(event.target.files || []);
@@ -72,7 +77,7 @@ export default function Settings() {
         files.forEach(file => {
             const reader = new FileReader();
 
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 const content = e.target.result || "";
 
                 const title = file.name
@@ -82,7 +87,7 @@ export default function Settings() {
 
                 const now = Date.now();
 
-                createNote({
+                await createNote({
                     title: title || "Imported Note",
                     content: content.trim(),
                     createdAt: now,
@@ -94,6 +99,12 @@ export default function Settings() {
         });
 
         alert("Import complete!");
+
+        // refresh UI after import
+        setTimeout(async () => {
+            const updated = await getAllNotes();
+            setNotes(updated);
+        }, 300);
     };
 
     const menuActions = [
@@ -106,13 +117,12 @@ export default function Settings() {
     return (
         <div className="p-4 flex flex-col gap-6">
 
-            {/* Top Menu (Back only) */}
+            {/* Top Menu */}
             <TopMenu actions={menuActions} />
 
-            {/* Centered Actions */}
+            {/* Center Actions */}
             <div className="flex flex-col items-center gap-4 w-full">
 
-                {/* Export */}
                 <button
                     className="btn btn-primary w-full max-w-md"
                     onClick={handleExport}
@@ -120,7 +130,6 @@ export default function Settings() {
                     Export Notes (.zip)
                 </button>
 
-                {/* Import */}
                 <label className="btn btn-outline w-full max-w-md cursor-pointer text-center">
                     Import Notes (.txt files)
                     <input

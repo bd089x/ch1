@@ -1,13 +1,28 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAllNotes, createNote } from "../hooks/useNotes";
 import TopMenu from "../components/TopMenu";
 
 export default function Home() {
     const navigate = useNavigate();
-    const notes = getAllNotes();
 
-    const handleNewNote = () => {
-        const note = createNote();
+    const [notes, setNotes] = useState([]);
+
+    /**
+     * LOAD NOTES (async from IndexedDB)
+     */
+    useEffect(() => {
+        const load = async () => {
+            const data = await getAllNotes();
+            setNotes(data);
+        };
+
+        load();
+    }, []);
+
+    const handleNewNote = async () => {
+        const note = await createNote();
+        setNotes(prev => [note, ...prev]);
         navigate(`/note/${note.id}`);
     };
 

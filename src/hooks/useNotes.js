@@ -1,77 +1,149 @@
-const STORAGE_KEY = "chalk-notes";
+const DB_NAME = "chalk-db";
+const STORE_NAME = "notes";
+const DB_VERSION = 1;
 
 /**
- * Load notes
+ * Open DB (singleton)
  */
-function loadNotes() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                const store = db.createObjectStore(STORE_NAME, {
+                    keyPath: "id"
+                });
+
+                store.createIndex("updatedAt", "updatedAt");
+            }
+        };
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
 }
 
 /**
- * Save notes
+ * Helper: run transaction
  */
-function saveNotes(notes) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+async function tx(mode, fn) {
+    const db = await openDB();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORE_NAME, mode);
+        const store = transaction.objectStore(STORE_NAME);
+
+        const result = fn(store);
+
+        transaction.oncomplete = () => resolve(result);
+        transaction.onerror = () => reject(transaction.error);
+    });
 }
 
 /**
- * Get all notes
+ * GET ALL NOTES
  */
-export function getAllNotes() {
-    return loadNotes();
+export async function getAllNotes() {
+    const db = await openDB();
+
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const store = tx.objectStore(STORE_NAME);
+
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+            const data = request.result || [];
+
+            // newest first (same behavior you had)
+            data.sort((a, b) => b.updatedAt - a.updatedAt);
+
+            resolve(data);
+        };
+
+        request.onerror = () => reject(request.error);
+    });
 }
 
 /**
- * Get single note
+ * GET ONE NOTE
  */
-export function getNote(id) {
-    const notes = loadNotes();
-    return notes.find(n => n.id === Number(id));
+export async function getNote(id) {
+    const db = await openDB();
+
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const store = tx.objectStore(STORE_NAME);
+
+        const request = store.get(Number(id));
+
+        request.onsuccess = () => resolve(request.result || null);
+        request.onerror = () => reject(request.error);
+    });
 }
 
 /**
- * CREATE NOTE (NOW FLEXIBLE)
- *
- * - UI usage: createNote()
- * - Import usage: createNote({ title, content, createdAt, updatedAt })
+ * CREATE NOTE
  */
-export function createNote(data = {}) {
-    const notes = loadNotes();
+export async function createNote(data = {}) {
+    const db = await openDB();
 
     const now = Date.now();
 
     const newNote = {
         id: data.id ?? now,
-
         title: data.title ?? "Untitled",
         content: data.content ?? "",
-
         createdAt: data.createdAt ?? now,
         updatedAt: data.updatedAt ?? now
     };
 
-    notes.unshift(newNote);
-    saveNotes(notes);
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
 
-    return newNote;
+        const request = store.add(newNote);
+
+        request.onsuccess = () => resolve(newNote);
+        request.onerror = () => reject(request.error);
+    });
 }
 
 /**
- * Update note
+ * UPDATE NOTE
  */
-export function updateNote(id, data) {
-    const notes = loadNotes();
+export async function updateNote(id, data) {
+    const db = await openDB();
 
-    const updated = notes.map(note => {
-        if (note.id !== Number(id)) return note;
+    return new Promise(async (resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
 
-        return {
-            ...note,
-            ...data,
-            updatedAt: Date.now()
+        const getReq = store.get(Number(id));
+
+        getReq.onsuccess = () => {
+            const existing = getReq.result;
+
+            if (!existing) {
+                reject("Note not found");
+                return;
+            }
+
+            const updated = {
+                ...existing,
+                ...data,
+                updatedAt: Date.now()
+            };
+
+            const putReq = store.put(updated);
+
+            putReq.onsuccess = () => resolve(updated);
+            putReq.onerror = () => reject(putReq.error);
         };
-    });
 
-    saveNotes(updated);
+        getReq.onerror = () => reject(getReq.error);
+    });
 }

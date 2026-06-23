@@ -12,32 +12,38 @@ export default function Editor() {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
 
-    // Load or create note
+    /**
+     * LOAD OR CREATE NOTE (ASYNC FIX)
+     */
     useEffect(() => {
-        if (id === "new") {
-            const newNote = createNote();
-            navigate(`/note/${newNote.id}`, { replace: true });
-            return;
-        }
+        const load = async () => {
+            if (id === "new") {
+                const newNote = await createNote();
+                navigate(`/note/${newNote.id}`, { replace: true });
+                return;
+            }
 
-        const existing = getNote(id);
+            const existing = await getNote(id);
 
-        if (existing) {
-            setNote(existing);
-            setTitle(existing.title || "");
-            setContent(existing.content || "");
-        }
+            if (existing) {
+                setNote(existing);
+                setTitle(existing.title || "");
+                setContent(existing.content || "");
+            }
+        };
+
+        load();
     }, [id]);
 
     /**
      * MANUAL SAVE
      */
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!note) return;
 
-        updateNote(note.id, {
+        await updateNote(note.id, {
             title: title.trim() || "Untitled",
-            content: content
+            content
         });
     };
 
@@ -50,9 +56,9 @@ export default function Editor() {
         const timer = setTimeout(() => {
             updateNote(note.id, {
                 title: title.trim() || "Untitled",
-                content: content
+                content
             });
-        }, 400); // small delay to avoid excessive writes
+        }, 400);
 
         return () => clearTimeout(timer);
     }, [title, content, note]);
@@ -74,7 +80,7 @@ export default function Editor() {
             {/* Top Menu */}
             <TopMenu actions={menuActions} />
 
-            {/* Title Input */}
+            {/* Title */}
             <input
                 className="
                     w-full
@@ -92,7 +98,7 @@ export default function Editor() {
                 placeholder="Title..."
             />
 
-            {/* Content Editor */}
+            {/* Content */}
             <textarea
                 className="
                     flex-1
