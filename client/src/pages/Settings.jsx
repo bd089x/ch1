@@ -32,12 +32,10 @@ export default function Settings() {
     }, []);
 
     /**
-     * SANITIZE FILE NAME
+     * KEEP NOTE TITLES EXACTLY AS WRITTEN
+     * (only remove accidental leading/trailing whitespace)
      */
-    const sanitize = (name) =>
-        (name || "Untitled")
-            .replace(/[^a-z0-9\s]/gi, "")
-            .trim();
+    const sanitize = (name) => (name || "Untitled").trim();
 
     /**
      * CREATE ZIP TIMESTAMP
@@ -60,6 +58,7 @@ export default function Settings() {
      */
     const formatBuildTime = (iso) => {
         if (!iso) return "";
+
         return new Date(iso).toLocaleString(undefined, {
             year: "numeric",
             month: "short",
@@ -79,8 +78,8 @@ export default function Settings() {
             const zip = new JSZip();
             const nameCount = {};
 
-            notes.forEach(note => {
-                const originalName = sanitize(note.note_title) || "Untitled";
+            notes.forEach((note) => {
+                const originalName = sanitize(note.note_title);
 
                 const key = originalName.toLowerCase();
 
@@ -100,7 +99,9 @@ export default function Settings() {
                 zip.file(filename, note.note_content || "");
             });
 
-            const blob = await zip.generateAsync({ type: "blob" });
+            const blob = await zip.generateAsync({
+                type: "blob"
+            });
 
             const url = URL.createObjectURL(blob);
 
@@ -120,21 +121,26 @@ export default function Settings() {
      */
     const handleImport = async (event) => {
         showLoading("Importing notes...");
+
         const files = Array.from(event.target.files || []);
-        if (!files.length) return;
+
+        if (!files.length) {
+            hideLoading();
+            return;
+        }
 
         try {
             await Promise.all(
-                files.map(file => {
+                files.map((file) => {
                     return new Promise((resolve) => {
                         const reader = new FileReader();
 
                         reader.onload = async (e) => {
                             const content = e.target.result || "";
 
+                            // Preserve filename exactly as-is (minus .txt)
                             const title = file.name
                                 .replace(/\.txt$/i, "")
-                                .replace(/_/g, " ")
                                 .trim();
 
                             await createNote({
@@ -156,6 +162,9 @@ export default function Settings() {
             navigate("/");
         } finally {
             hideLoading();
+
+            // Allow importing the same file again later
+            event.target.value = "";
         }
     };
 
@@ -168,11 +177,9 @@ export default function Settings() {
 
     return (
         <div className="p-4 flex flex-col gap-6">
-
             <TopMenu actions={menuActions} />
 
             <div className="flex flex-col gap-3">
-
                 {/* EXPORT */}
                 <button
                     onClick={handleExport}
@@ -183,7 +190,8 @@ export default function Settings() {
                     </span>
 
                     <span className="text-xs opacity-60">
-                        Download all notes as individual .txt files inside a zip archive. Useful for backups or moving data between devices.
+                        Download all notes as individual .txt files inside a zip
+                        archive. Useful for backups or moving data between devices.
                     </span>
                 </button>
 
@@ -194,7 +202,8 @@ export default function Settings() {
                     </span>
 
                     <span className="text-xs opacity-60">
-                        Upload one or more .txt files and convert them into notes stored locally on this device.
+                        Upload one or more .txt files and convert them into notes
+                        stored locally on this device.
                     </span>
 
                     <input
@@ -216,17 +225,16 @@ export default function Settings() {
                     </span>
 
                     <span className="text-xs opacity-60">
-                        Permanently delete all notes and restore the app to a clean state. This action requires confirmation.
+                        Permanently delete all notes and restore the app to a clean
+                        state. This action requires confirmation.
                     </span>
                 </button>
-
             </div>
 
             {/* BUILD INFO */}
             <div className="text-xs opacity-40 text-center pt-6">
                 Built: {formatBuildTime(BUILD_TIME)}
             </div>
-
         </div>
     );
 }
