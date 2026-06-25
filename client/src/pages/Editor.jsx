@@ -5,6 +5,13 @@ import TopMenu from "../components/TopMenu";
 import { getNote, createNote, updateNote } from "../hooks/useNotes";
 import { useLoading } from "../context/LoadingContext";
 
+import {
+    splitIntoChunks,
+    joinChunks,
+    updateChunk,
+    normalizeChunks
+} from "../lib/documentModel";
+
 export default function Editor() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -13,8 +20,13 @@ export default function Editor() {
     const [note, setNote] = useState(null);
     const [title, setTitle] = useState("");
 
-    // textarea lives outside React
     const textRef = useRef(null);
+
+    const [chunks, setChunks] = useState([]);
+    const [currentChunk, setCurrentChunk] = useState(0);
+
+    // 🧠 prevents DOM overwrite during typing
+    const isTypingRef = useRef(false);
 
     /**
      * LOAD OR CREATE NOTE
@@ -32,7 +44,6 @@ export default function Editor() {
                 } finally {
                     hideLoading();
                 }
-
                 return;
             }
 
@@ -44,6 +55,15 @@ export default function Editor() {
                 if (existing) {
                     setNote(existing);
                     setTitle(existing.note_title || "");
+
+                    const normalized = normalizeChunks(
+                        splitIntoChunks(
+                            existing.note_content || ""
+                        )
+                    );
+
+                    setChunks(normalized);
+                    setCurrentChunk(0);
                 }
             } finally {
                 hideLoading();
@@ -54,13 +74,28 @@ export default function Editor() {
     }, [id]);
 
     /**
-     * Populate textarea once note loads
+     * Render chunk ONLY when switching chunks
+     * (NOT when chunks update during typing)
      */
     useEffect(() => {
-        if (!note || !textRef.current) return;
+        if (!textRef.current) return;
 
-        textRef.current.value = note.note_content || "";
-    }, [note]);
+        isTypingRef.current = true;
+
+        textRef.current.value =
+            chunks[currentChunk]?.text || "";
+
+        // optional: place cursor at end on chunk switch
+        requestAnimationFrame(() => {
+            const el = textRef.current;
+            if (!el) return;
+
+            el.selectionStart = el.selectionEnd = el.value.length;
+
+            isTypingRef.current = false;
+        });
+
+    }, [currentChunk]); // 👈 IMPORTANT: removed `chunks` dependency
 
     /**
      * MANUAL SAVE
@@ -71,38 +106,42 @@ export default function Editor() {
         showLoading("Saving note...");
 
         try {
-            const updatedContent = textRef.current.value;
+            const updatedChunks = updateChunk(
+                chunks,
+                currentChunk,
+                textRef.current.value
+            );
+
+            setChunks(updatedChunks);
+
+            const whole = joinChunks(updatedChunks);
 
             await updateNote(note.note_id, {
                 note_title: title.trim() || "Untitled",
-                note_content: updatedContent
+                note_content: whole
             });
 
             setNote(prev => ({
                 ...prev,
                 note_title: title.trim() || "Untitled",
-                note_content: updatedContent
+                note_content: whole
             }));
+
         } finally {
             hideLoading();
         }
     };
 
     /**
-     * AUTO SAVE
-     *
-     * Only depends on title changes.
-     * Typing in the textarea no longer causes React rerenders.
+     * AUTOSAVE TITLE ONLY
      */
     useEffect(() => {
         if (!note) return;
 
         const timer = setTimeout(() => {
-            if (!textRef.current) return;
-
             updateNote(note.note_id, {
                 note_title: title.trim() || "Untitled",
-                note_content: textRef.current.value
+                note_content: joinChunks(chunks)
             });
         }, 1000);
 
@@ -111,7 +150,7 @@ export default function Editor() {
     }, [title, note]);
 
     /**
-     * Autosave after user stops typing
+     * AUTOSAVE CURRENT CHUNK (NO STATE REWRITE DURING TYPING)
      */
     useEffect(() => {
         if (!note || !textRef.current) return;
@@ -121,13 +160,26 @@ export default function Editor() {
         let timer;
 
         const handleInput = () => {
+            isTypingRef.current = true;
+
             clearTimeout(timer);
 
             timer = setTimeout(() => {
+                const updatedChunks = updateChunk(
+                    chunks,
+                    currentChunk,
+                    textarea.value
+                );
+
+                setChunks(updatedChunks);
+
                 updateNote(note.note_id, {
                     note_title: title.trim() || "Untitled",
-                    note_content: textarea.value
+                    note_content: joinChunks(updatedChunks)
                 });
+
+                isTypingRef.current = false;
+
             }, 1000);
         };
 
@@ -138,12 +190,44 @@ export default function Editor() {
             textarea.removeEventListener("input", handleInput);
         };
 
-    }, [note, title]);
+    }, [note, title, chunks, currentChunk]);
+
+    /**
+     * Chunk navigation helpers
+     */
+    const goPrevChunk = () => {
+        setChunks(prev => {
+            const updated = updateChunk(
+                prev,
+                currentChunk,
+                textRef.current?.value || ""
+            );
+            return updated;
+        });
+
+        setCurrentChunk(c => Math.max(0, c - 1));
+    };
+
+    const goNextChunk = () => {
+        setChunks(prev => {
+            const updated = updateChunk(
+                prev,
+                currentChunk,
+                textRef.current?.value || ""
+            );
+            return updated;
+        });
+
+        setCurrentChunk(c =>
+            Math.min(chunks.length - 1, c + 1)
+        );
+    };
 
     const menuActions = [
         {
             label: "Delete",
-            onClick: () => navigate(`/delete/${note?.note_id || id}`)
+            onClick: () =>
+                navigate(`/delete/${note?.note_id || id}`)
         },
         {
             label: "Save",
@@ -159,6 +243,23 @@ export default function Editor() {
         <div className="flex flex-col h-screen p-4 gap-4">
 
             <TopMenu actions={menuActions} />
+
+            {/* Chunk controls */}
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+
+                <button onClick={goPrevChunk}>
+                    ◀
+                </button>
+
+                <span>
+                    Chunk {currentChunk + 1} / {chunks.length}
+                </span>
+
+                <button onClick={goNextChunk}>
+                    ▶
+                </button>
+
+            </div>
 
             <input
                 className="
