@@ -13,8 +13,7 @@ export default function Editor() {
     const [note, setNote] = useState(null);
     const [title, setTitle] = useState("");
 
-    // textarea lives outside React
-    const textRef = useRef(null);
+    const editorRef = useRef(null);
 
     /**
      * LOAD OR CREATE NOTE
@@ -26,13 +25,10 @@ export default function Editor() {
 
                 try {
                     const newNote = await createNote();
-                    navigate(`/note/${newNote.note_id}`, {
-                        replace: true
-                    });
+                    navigate(`/note/${newNote.note_id}`, { replace: true });
                 } finally {
                     hideLoading();
                 }
-
                 return;
             }
 
@@ -54,24 +50,24 @@ export default function Editor() {
     }, [id]);
 
     /**
-     * Populate textarea once note loads
+     * Populate editor once note loads
      */
     useEffect(() => {
-        if (!note || !textRef.current) return;
+        if (!note || !editorRef.current) return;
 
-        textRef.current.value = note.note_content || "";
+        editorRef.current.innerText = note.note_content || "";
     }, [note]);
 
     /**
      * MANUAL SAVE
      */
     const handleSave = async () => {
-        if (!note || !textRef.current) return;
+        if (!note || !editorRef.current) return;
 
         showLoading("Saving note...");
 
         try {
-            const updatedContent = textRef.current.value;
+            const updatedContent = editorRef.current.innerText;
 
             await updateNote(note.note_id, {
                 note_title: title.trim() || "Untitled",
@@ -89,34 +85,30 @@ export default function Editor() {
     };
 
     /**
-     * AUTO SAVE
-     *
-     * Only depends on title changes.
-     * Typing in the textarea no longer causes React rerenders.
+     * AUTOSAVE (title + editor content)
      */
     useEffect(() => {
         if (!note) return;
 
         const timer = setTimeout(() => {
-            if (!textRef.current) return;
+            if (!editorRef.current) return;
 
             updateNote(note.note_id, {
                 note_title: title.trim() || "Untitled",
-                note_content: textRef.current.value
+                note_content: editorRef.current.innerText
             });
         }, 1000);
 
         return () => clearTimeout(timer);
-
     }, [title, note]);
 
     /**
-     * Autosave after user stops typing
+     * DIRECT INPUT HANDLER (instead of textarea listener)
      */
     useEffect(() => {
-        if (!note || !textRef.current) return;
+        if (!note || !editorRef.current) return;
 
-        const textarea = textRef.current;
+        const el = editorRef.current;
 
         let timer;
 
@@ -126,18 +118,17 @@ export default function Editor() {
             timer = setTimeout(() => {
                 updateNote(note.note_id, {
                     note_title: title.trim() || "Untitled",
-                    note_content: textarea.value
+                    note_content: el.innerText
                 });
             }, 1000);
         };
 
-        textarea.addEventListener("input", handleInput);
+        el.addEventListener("input", handleInput);
 
         return () => {
             clearTimeout(timer);
-            textarea.removeEventListener("input", handleInput);
+            el.removeEventListener("input", handleInput);
         };
-
     }, [note, title]);
 
     const menuActions = [
@@ -161,40 +152,29 @@ export default function Editor() {
             <TopMenu actions={menuActions} />
 
             <input
-                className="
-                    w-full
-                    bg-black
-                    text-white
-                    text-xl
-                    font-semibold
-                    p-2
-                    outline-none
-                    border-b
-                    border-neutral-700
-                "
+                className="w-full bg-black text-white text-xl font-semibold p-2 outline-none border-b border-neutral-700"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Title..."
                 disabled={loading}
             />
 
-            <textarea
-                ref={textRef}
+            {/* EDITOR REPLACEMENT */}
+            <div
+                ref={editorRef}
+                contentEditable
+                spellCheck={false}
                 className="
                     flex-1
                     w-full
-                    resize-none
                     bg-black
                     text-white
                     p-4
                     outline-none
-                    border
-                    border-neutral-700
-                    rounded-lg
+                    overflow-auto
+                    whitespace-pre-wrap
                 "
-                placeholder="Start writing..."
-                disabled={loading}
-                spellCheck={false}
+                suppressContentEditableWarning
             />
 
         </div>
