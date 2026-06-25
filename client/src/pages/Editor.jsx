@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import TopMenu from "../components/TopMenu";
@@ -12,7 +12,9 @@ export default function Editor() {
 
     const [note, setNote] = useState(null);
     const [title, setTitle] = useState("");
-    const [content, setContent] = useState("");
+
+    // textarea lives outside React
+    const textRef = useRef(null);
 
     /**
      * LOAD OR CREATE NOTE
@@ -24,7 +26,9 @@ export default function Editor() {
 
                 try {
                     const newNote = await createNote();
-                    navigate(`/note/${newNote.note_id}`, { replace: true });
+                    navigate(`/note/${newNote.note_id}`, {
+                        replace: true
+                    });
                 } finally {
                     hideLoading();
                 }
@@ -40,7 +44,6 @@ export default function Editor() {
                 if (existing) {
                     setNote(existing);
                     setTitle(existing.note_title || "");
-                    setContent(existing.note_content || "");
                 }
             } finally {
                 hideLoading();
@@ -51,24 +54,34 @@ export default function Editor() {
     }, [id]);
 
     /**
+     * Populate textarea once note loads
+     */
+    useEffect(() => {
+        if (!note || !textRef.current) return;
+
+        textRef.current.value = note.note_content || "";
+    }, [note]);
+
+    /**
      * MANUAL SAVE
      */
     const handleSave = async () => {
-        if (!note) return;
+        if (!note || !textRef.current) return;
 
         showLoading("Saving note...");
 
         try {
+            const updatedContent = textRef.current.value;
+
             await updateNote(note.note_id, {
                 note_title: title.trim() || "Untitled",
-                note_content: content
+                note_content: updatedContent
             });
 
-            // keep local state in sync
             setNote(prev => ({
                 ...prev,
                 note_title: title.trim() || "Untitled",
-                note_content: content
+                note_content: updatedContent
             }));
         } finally {
             hideLoading();
@@ -76,20 +89,56 @@ export default function Editor() {
     };
 
     /**
-     * AUTO SAVE (debounced)
+     * AUTO SAVE
+     *
+     * Only depends on title changes.
+     * Typing in the textarea no longer causes React rerenders.
      */
     useEffect(() => {
         if (!note) return;
 
         const timer = setTimeout(() => {
+            if (!textRef.current) return;
+
             updateNote(note.note_id, {
                 note_title: title.trim() || "Untitled",
-                note_content: content
+                note_content: textRef.current.value
             });
-        }, 400);
+        }, 1000);
 
         return () => clearTimeout(timer);
-    }, [title, content, note]);
+
+    }, [title, note]);
+
+    /**
+     * Autosave after user stops typing
+     */
+    useEffect(() => {
+        if (!note || !textRef.current) return;
+
+        const textarea = textRef.current;
+
+        let timer;
+
+        const handleInput = () => {
+            clearTimeout(timer);
+
+            timer = setTimeout(() => {
+                updateNote(note.note_id, {
+                    note_title: title.trim() || "Untitled",
+                    note_content: textarea.value
+                });
+            }, 1000);
+        };
+
+        textarea.addEventListener("input", handleInput);
+
+        return () => {
+            clearTimeout(timer);
+            textarea.removeEventListener("input", handleInput);
+        };
+
+    }, [note, title]);
 
     const menuActions = [
         {
@@ -130,6 +179,7 @@ export default function Editor() {
             />
 
             <textarea
+                ref={textRef}
                 className="
                     flex-1
                     w-full
@@ -142,10 +192,9 @@ export default function Editor() {
                     border-neutral-700
                     rounded-lg
                 "
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
                 placeholder="Start writing..."
                 disabled={loading}
+                spellCheck={false}
             />
 
         </div>
