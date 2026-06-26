@@ -1,171 +1,142 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllNotes, createNote } from "../hooks/useNotes";
+
 import TopMenu from "../components/TopMenu";
+
+import {
+    getAllTags,
+    createNote
+} from "../hooks/useNotes";
+
 import { useLoading } from "../context/LoadingContext";
 
-/**
- * LOCALSTORAGE KEY
- */
-const SORT_KEY = "chalk-sort-mode";
-
 export default function Home() {
+
     const navigate = useNavigate();
-    const { showLoading, hideLoading } = useLoading();
 
-    const [notes, setNotes] = useState([]);
+    const {
+        showLoading,
+        hideLoading
+    } = useLoading();
 
-    /**
-     * SORT STATE (hydrated from localStorage)
-     */
-    const [sortMode, setSortMode] = useState(() => {
-        return localStorage.getItem(SORT_KEY) || "updated-desc";
-    });
+    const [tags, setTags] = useState([]);
 
-    const [sortDir, setSortDir] = useState(() => {
-        const saved = localStorage.getItem(SORT_KEY) || "updated-desc";
-        return saved.endsWith("asc") ? "asc" : "desc";
-    });
+    const loadTags = async () => {
 
-    /**
-     * SAVE SORT MODE TO LOCALSTORAGE
-     */
-    const persistSort = (mode) => {
-        localStorage.setItem(SORT_KEY, mode);
-    };
-
-    /**
-     * LOAD NOTES (whenever sort changes)
-     */
-    useEffect(() => {
-        const load = async () => {
-            showLoading("Loading notes...");
-
-            try {
-                const data = await getAllNotes(sortMode);
-                setNotes(data);
-            } finally {
-                hideLoading();
-            }
-        };
-
-        load();
-    }, [sortMode]);
-
-    /**
-     * NEW NOTE
-     */
-    const handleNewNote = async () => {
-        showLoading("Creating note...");
+        showLoading("Loading workspaces...");
 
         try {
-            const note = await createNote();
 
-            setNotes(prev => [note, ...prev]);
+            const data = await getAllTags();
 
-            navigate(`/note/${note.note_id}`);
+            setTags(data);
+
         } finally {
+
             hideLoading();
+
         }
+
     };
 
-    /**
-     * SORT HELPERS
-     */
-    const toggleDateSort = () => {
-        let next;
+    useEffect(() => {
+        loadTags();
+    }, []);
 
-        if (sortMode.startsWith("updated")) {
-            next =
-                sortMode === "updated-desc"
-                    ? "updated-asc"
-                    : "updated-desc";
-        } else {
-            next = "updated-desc";
+    const handleNew = async () => {
+
+        showLoading("Creating inbox note...");
+
+        try {
+
+            await createNote({
+
+                note_content:
+`#inbox
+
+`
+
+            });
+
+            await loadTags();
+
+            navigate("/editor/inbox");
+
+        } finally {
+
+            hideLoading();
+
         }
 
-        setSortMode(next);
-        setSortDir(next.endsWith("asc") ? "asc" : "desc");
-        persistSort(next);
-    };
-
-    const toggleTitleSort = () => {
-        let next;
-
-        if (sortMode.startsWith("title")) {
-            next =
-                sortMode === "title-asc"
-                    ? "title-desc"
-                    : "title-asc";
-        } else {
-            next = "title-asc";
-        }
-
-        setSortMode(next);
-        setSortDir(next.endsWith("asc") ? "asc" : "desc");
-        persistSort(next);
     };
 
     const menuActions = [
-        {
-            label: `Date ${sortMode.startsWith("updated") ? (sortDir === "desc" ? "↓" : "↑") : ""}`,
-            onClick: toggleDateSort
-        },
-        {
-            label: `Title ${sortMode.startsWith("title") ? (sortDir === "desc" ? "↓" : "↑") : ""}`,
-            onClick: toggleTitleSort
-        },
+
         {
             label: "Settings",
             onClick: () => navigate("/settings")
         },
+
         {
             label: "New",
-            onClick: handleNewNote
-        },
+            onClick: handleNew
+        }
+
     ];
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return "";
-
-        return new Date(timestamp).toLocaleString(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit"
-        });
-    };
-
     return (
+
         <div className="w-full p-4">
 
             <TopMenu actions={menuActions} />
 
             <div className="flex flex-col gap-2">
 
-                {notes.map(note => {
-                    const title = note.note_title?.trim() || "Untitled";
+                {tags.map(({ tag, count }) => (
 
-                    return (
-                        <button
-                            key={note.note_id}
-                            className="btn btn-outline w-full justify-start flex flex-col items-start"
-                            onClick={() => navigate(`/note/${note.note_id}`)}
-                        >
-                            <span className="font-medium">
-                                {title}
-                            </span>
+                    <button
+                        key={tag}
+                        className="
+                            btn
+                            btn-outline
+                            w-full
+                            justify-between
+                        "
+                        onClick={() =>
+                            navigate(`/editor/${tag}`)
+                        }
+                    >
 
-                            <span className="text-xs opacity-60">
-                                Updated: {formatDate(note.note_updated_at)}
-                            </span>
-                        </button>
-                    );
-                })}
+                        <span>
+                            #{tag}
+                        </span>
+
+                        <span className="opacity-60">
+                            {count}
+                        </span>
+
+                    </button>
+
+                ))}
+
+                {tags.length === 0 && (
+
+                    <div className="text-center opacity-50 py-12">
+
+                        No workspaces yet.
+
+                        <br />
+
+                        Press <strong>New</strong> to create your first note.
+
+                    </div>
+
+                )}
 
             </div>
 
         </div>
+
     );
+
 }

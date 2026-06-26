@@ -1,154 +1,76 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import TopMenu from "../components/TopMenu";
-import { getNote, createNote, updateNote } from "../hooks/useNotes";
+import NewNote from "../components/NewNote";
+import NoteCard from "../components/NoteCard";
+
+import {
+    getAllNotes,
+    getNotesByTag
+} from "../hooks/useNotes";
+
 import { useLoading } from "../context/LoadingContext";
 
 export default function Editor() {
-    const { id } = useParams();
+    const { tags } = useParams();
     const navigate = useNavigate();
-    const { loading, showLoading, hideLoading } = useLoading();
 
-    const [note, setNote] = useState(null);
-    const [title, setTitle] = useState("");
+    const { showLoading, hideLoading } = useLoading();
 
-    // textarea lives outside React
-    const textRef = useRef(null);
+    const [notes, setNotes] = useState([]);
 
-    /**
-     * LOAD OR CREATE NOTE
-     */
-    useEffect(() => {
-        const load = async () => {
-            if (id === "new") {
-                showLoading("Creating note...");
+    const tagList = useMemo(() => {
+        if (!tags) return [];
 
-                try {
-                    const newNote = await createNote();
-                    navigate(`/note/${newNote.note_id}`, {
-                        replace: true
-                    });
-                } finally {
-                    hideLoading();
-                }
+        return tags
+            .split(",")
+            .map(tag => tag.trim().replace(/^#/, "").toLowerCase())
+            .filter(Boolean);
 
-                return;
-            }
+    }, [tags]);
 
-            showLoading("Opening note...");
-
-            try {
-                const existing = await getNote(id);
-
-                if (existing) {
-                    setNote(existing);
-                    setTitle(existing.note_title || "");
-                }
-            } finally {
-                hideLoading();
-            }
-        };
-
-        load();
-    }, [id]);
-
-    /**
-     * Populate textarea once note loads
-     */
-    useEffect(() => {
-        if (!note || !textRef.current) return;
-
-        textRef.current.value = note.note_content || "";
-    }, [note]);
-
-    /**
-     * MANUAL SAVE
-     */
-    const handleSave = async () => {
-        if (!note || !textRef.current) return;
-
-        showLoading("Saving note...");
+    const loadWorkspace = useCallback(async () => {
+        showLoading("Loading workspace...");
 
         try {
-            const updatedContent = textRef.current.value;
+            let data;
 
-            await updateNote(note.note_id, {
-                note_title: title.trim() || "Untitled",
-                note_content: updatedContent
-            });
+            if (tagList.length === 0) {
+                data = await getAllNotes();
+            } else {
+                // Intersect all requested tags.
+                const groups = await Promise.all(
+                    tagList.map(tag => getNotesByTag(tag))
+                );
 
-            setNote(prev => ({
-                ...prev,
-                note_title: title.trim() || "Untitled",
-                note_content: updatedContent
-            }));
+                data = groups.reduce((acc, current, index) => {
+                    if (index === 0) return current;
+
+                    const ids = new Set(
+                        current.map(note => note.note_id)
+                    );
+
+                    return acc.filter(note =>
+                        ids.has(note.note_id)
+                    );
+
+                }, []);
+            }
+
+            setNotes(data);
+
         } finally {
             hideLoading();
         }
-    };
 
-    /**
-     * AUTO SAVE
-     *
-     * Only depends on title changes.
-     * Typing in the textarea no longer causes React rerenders.
-     */
+    }, [tagList, showLoading, hideLoading]);
+
     useEffect(() => {
-        if (!note) return;
-
-        const timer = setTimeout(() => {
-            if (!textRef.current) return;
-
-            updateNote(note.note_id, {
-                note_title: title.trim() || "Untitled",
-                note_content: textRef.current.value
-            });
-        }, 1000);
-
-        return () => clearTimeout(timer);
-
-    }, [title, note]);
-
-    /**
-     * Autosave after user stops typing
-     */
-    useEffect(() => {
-        if (!note || !textRef.current) return;
-
-        const textarea = textRef.current;
-
-        let timer;
-
-        const handleInput = () => {
-            clearTimeout(timer);
-
-            timer = setTimeout(() => {
-                updateNote(note.note_id, {
-                    note_title: title.trim() || "Untitled",
-                    note_content: textarea.value
-                });
-            }, 1000);
-        };
-
-        textarea.addEventListener("input", handleInput);
-
-        return () => {
-            clearTimeout(timer);
-            textarea.removeEventListener("input", handleInput);
-        };
-
-    }, [note, title]);
+        loadWorkspace();
+    }, [loadWorkspace]);
 
     const menuActions = [
-        {
-            label: "Delete",
-            onClick: () => navigate(`/delete/${note?.note_id || id}`)
-        },
-        {
-            label: "Save",
-            onClick: handleSave
-        },
         {
             label: "Back",
             onClick: () => navigate("/")
@@ -160,40 +82,22 @@ export default function Editor() {
 
             <TopMenu actions={menuActions} />
 
-            <input
-                className="
-                    w-full
-                    bg-black
-                    text-white
-                    text-xl
-                    font-semibold
-                    p-2
-                    outline-none
-                    border-b
-                    border-neutral-700
-                "
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Title..."
-                disabled={loading}
+            <NewNote
+                tags={tagList}
+                onCreated={loadWorkspace}
             />
 
-            <textarea
-                ref={textRef}
-                className="
-                    flex-1
-                    w-full
-                    resize-none
-                    bg-black
-                    text-white
-                    p-4
-                    outline-none
-                    rounded-lg
-                "
-                placeholder="Start writing..."
-                disabled={loading}
-                spellCheck={false}
-            />
+
+                {notes.map(note => (
+
+                    <NoteCard
+                        key={note.note_id}
+                        note={note}
+                        onDeleted={loadWorkspace}
+                    />
+
+                ))}
+
 
         </div>
     );

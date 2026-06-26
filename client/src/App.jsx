@@ -21,13 +21,15 @@ export default function App() {
                     element={<Home />}
                 />
 
+                {/* Empty workspace */}
                 <Route
-                    path="/new"
+                    path="/editor"
                     element={<Editor />}
                 />
 
+                {/* Workspace filtered by one or more tags */}
                 <Route
-                    path="/note/:id"
+                    path="/editor/:tags"
                     element={<Editor />}
                 />
 
@@ -41,7 +43,6 @@ export default function App() {
                     element={<Settings />}
                 />
 
-                {/* RESET / DANGER ZONE */}
                 <Route
                     path="/reset"
                     element={<Reset />}
