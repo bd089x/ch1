@@ -55,17 +55,3 @@ export async function deleteNote(note_id) {
 export async function deleteAllNotes() {
     return noteService.deleteAllNotes();
 }
-
-/**
- * Export database.
- */
-export async function exportData() {
-    return noteService.exportData();
-}
-
-/**
- * Import database.
- */
-export async function importData(data, mode) {
-    return noteService.importData(data, mode);
-}
