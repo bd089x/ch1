@@ -3,11 +3,19 @@ import { useNavigate } from "react-router-dom";
 export default function WorkspaceCard({
     workspace
 }) {
-
     const navigate = useNavigate();
 
-    return (
+    const formatDate = (timestamp) => {
+        if (!timestamp) return "";
 
+        return new Date(timestamp).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric"
+        });
+    };
+
+    return (
         <div className="border border-neutral-800 rounded-lg p-3">
 
             <div className="flex justify-between items-start mb-3">
@@ -15,17 +23,17 @@ export default function WorkspaceCard({
                 <div>
 
                     <div className="font-medium">
-
                         {workspace.name}
-
                     </div>
 
                     <div className="text-xs text-neutral-500 mt-1">
-
                         {workspace.tags
                             .map(tag => `#${tag}`)
                             .join(" ")}
+                    </div>
 
+                    <div className="text-[11px] text-neutral-600 mt-2">
+                        Updated {formatDate(workspace.updated_at)}
                     </div>
 
                 </div>
@@ -74,7 +82,5 @@ export default function WorkspaceCard({
             </button>
 
         </div>
-
     );
-
 }

@@ -2,7 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import TopMenu from "../components/TopMenu";
+
 import { deleteAllNotes } from "../hooks/useNotes";
+import { deleteAllWorkspaces } from "../utils/WorkspaceUtil";
+
 import { useLoading } from "../context/LoadingContext";
 
 export default function Reset() {
@@ -19,10 +22,14 @@ export default function Reset() {
     const handleReset = async () => {
         if (confirmText !== RESET_PHRASE) return;
 
-        showLoading("Deleting all notes...");
+        showLoading("Deleting all data...");
 
         try {
-            await deleteAllNotes();
+            await Promise.all([
+                deleteAllNotes(),
+                deleteAllWorkspaces()
+            ]);
+
             navigate("/");
         } finally {
             hideLoading();
@@ -50,7 +57,7 @@ export default function Reset() {
 
             {/* Warning */}
             <div className="text-sm opacity-70">
-                This will permanently delete all notes on this device.
+                This will permanently delete all notes and workspaces on this device.
                 This action cannot be undone.
             </div>
 

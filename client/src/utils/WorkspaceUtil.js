@@ -8,7 +8,9 @@ const STORAGE_KEY = "chalk-workspaces";
  *   {
  *     id: "...",
  *     name: "Notes",
- *     tags: ["notes", "thoughts"]
+ *     tags: ["notes", "thoughts"],
+ *     created_at: 123456,
+ *     updated_at: 123456
  *   }
  * ]
  */
@@ -18,9 +20,7 @@ export function getWorkspaces() {
             localStorage.getItem(STORAGE_KEY) || "[]"
         );
 
-        return Array.isArray(data)
-            ? data
-            : [];
+        return Array.isArray(data) ? data : [];
 
     } catch {
         return [];
@@ -43,11 +43,10 @@ export function createWorkspace({
     name,
     tags = []
 }) {
-
     const workspaces = getWorkspaces();
+    const now = Date.now();
 
     const workspace = {
-
         id: crypto.randomUUID(),
 
         name: (name || "Untitled").trim(),
@@ -63,8 +62,10 @@ export function createWorkspace({
                     )
                     .filter(Boolean)
             )
-        ]
+        ],
 
+        created_at: now,
+        updated_at: now
     };
 
     workspaces.push(workspace);
@@ -80,11 +81,7 @@ export function createWorkspace({
 /**
  * Update a workspace.
  */
-export function updateWorkspace(
-    id,
-    data = {}
-) {
-
+export function updateWorkspace(id, data = {}) {
     const workspaces = getWorkspaces();
 
     const index = workspaces.findIndex(
@@ -95,16 +92,16 @@ export function updateWorkspace(
         throw new Error("Workspace not found.");
     }
 
-    workspaces[index] = {
+    const existing = workspaces[index];
 
-        ...workspaces[index],
+    const updated = {
+        ...existing,
 
         ...(data.name !== undefined && {
             name: data.name.trim()
         }),
 
         ...(data.tags !== undefined && {
-
             tags: [
                 ...new Set(
                     data.tags
@@ -117,24 +114,25 @@ export function updateWorkspace(
                         .filter(Boolean)
                 )
             ]
+        }),
 
-        })
-
+        updated_at: Date.now()
     };
+
+    workspaces[index] = updated;
 
     localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify(workspaces)
     );
 
-    return workspaces[index];
+    return updated;
 }
 
 /**
  * Delete a workspace.
  */
 export function deleteWorkspace(id) {
-
     const workspaces = getWorkspaces().filter(
         workspace => workspace.id !== id
     );
@@ -149,7 +147,5 @@ export function deleteWorkspace(id) {
  * Remove every saved workspace.
  */
 export function deleteAllWorkspaces() {
-
     localStorage.removeItem(STORAGE_KEY);
-
 }

@@ -1,18 +1,20 @@
-- adding a title and date, ascending/descending to workspaces
-- adding a date, ascending/descending to getAllTags along with pagination
+- future pagination for notes of getAllTags
+__
+- adding a title and date, ascending/descending to workspaces ❤️
+- adding a date, ascending/descending to getAllTags ❤️
 __
 - color by tag, combined color if multiple tags combine
 - a search for words within the content for given tags
+- a search for workspaces
 
 #advanced #features
 __
-- add in a user defined tag for building notes by groups of tags
-- fix the buttons for the tags on the homepage
-- allow hashtags to live on the same line when notes are created
-- allow note cards to auto save themselves
-- have it save if there is text in the new note box, and the component will dismount
+- add in a user defined tag for building notes by groups of tags ❤️
+- fix the buttons for the tags on the homepage ❤️
+- allow hashtags to live on the same line when notes are created ❤️
+- allow note cards to auto save themselves ❤️
+- have it save if there is text in the new note box, and the component will dismount ❤️
 - ensure that import will merge with pre existing notes
-- pagination for notes in the editor to load a set
 
 #build #features
 __
