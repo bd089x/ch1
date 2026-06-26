@@ -5,7 +5,7 @@ import TopMenu from "../components/TopMenu";
 
 import {
     createWorkspace
-} from "../utils/WorkspaceUtil";
+} from "../composites/workspace.composite";
 
 export default function WorkspaceCreate() {
 
@@ -17,10 +17,9 @@ export default function WorkspaceCreate() {
     /**
      * CREATE WORKSPACE
      */
-    const handleCreate = () => {
+    const handleCreate = async () => {
 
         const workspaceName = name.trim();
-
         if (!workspaceName) return;
 
         const tagList = tags
@@ -35,13 +34,12 @@ export default function WorkspaceCreate() {
 
         if (!tagList.length) return;
 
-        createWorkspace({
+        await createWorkspace({
             name: workspaceName,
             tags: tagList
         });
 
         navigate("/");
-
     };
 
     const menuActions = [
@@ -56,7 +54,6 @@ export default function WorkspaceCreate() {
         tags.trim().length > 0;
 
     return (
-
         <div className="p-4 flex flex-col gap-6">
 
             <TopMenu actions={menuActions} />
@@ -124,7 +121,5 @@ export default function WorkspaceCreate() {
             </button>
 
         </div>
-
     );
-
 }

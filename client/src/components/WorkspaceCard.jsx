@@ -23,17 +23,17 @@ export default function WorkspaceCard({
                 <div>
 
                     <div className="font-medium">
-                        {workspace.name}
+                        {workspace.workspace_title}
                     </div>
 
                     <div className="text-xs text-neutral-500 mt-1">
-                        {workspace.tags
+                        {(workspace.workspace_tags || [])
                             .map(tag => `#${tag}`)
                             .join(" ")}
                     </div>
 
                     <div className="text-[11px] text-neutral-600 mt-2">
-                        Updated {formatDate(workspace.updated_at)}
+                        Updated {formatDate(workspace.workspace_updated_at)}
                     </div>
 
                 </div>
@@ -44,7 +44,7 @@ export default function WorkspaceCard({
                         className="text-blue-400 text-sm"
                         onClick={() =>
                             navigate(
-                                `/workspace/update/${workspace.id}`
+                                `/workspace/update/${workspace.workspace_id}`
                             )
                         }
                     >
@@ -55,7 +55,7 @@ export default function WorkspaceCard({
                         className="text-red-400 text-sm"
                         onClick={() =>
                             navigate(
-                                `/workspace/delete/${workspace.id}`
+                                `/workspace/delete/${workspace.workspace_id}`
                             )
                         }
                     >
@@ -74,7 +74,7 @@ export default function WorkspaceCard({
                 "
                 onClick={() =>
                     navigate(
-                        `/editor/${workspace.tags.join(",")}`
+                        `/editor/${(workspace.workspace_tags || []).join(",")}`
                     )
                 }
             >

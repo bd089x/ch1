@@ -6,7 +6,7 @@ import TopMenu from "../components/TopMenu";
 import {
     getWorkspace,
     deleteWorkspace
-} from "../utils/WorkspaceUtil";
+} from "../composites/workspace.composite";
 
 export default function WorkspaceDelete() {
 
@@ -21,12 +21,9 @@ export default function WorkspaceDelete() {
      */
     useEffect(() => {
 
-        const load = () => {
-
-            const data = getWorkspace(id);
-
+        const load = async () => {
+            const data = await getWorkspace(id);
             setWorkspace(data);
-
         };
 
         load();
@@ -36,16 +33,15 @@ export default function WorkspaceDelete() {
     /**
      * DELETE WORKSPACE
      */
-    const handleDelete = () => {
+    const handleDelete = async () => {
 
         if (!workspace) return;
 
-        if (confirmText !== workspace.name) return;
+        if (confirmText !== workspace.workspace_title) return;
 
-        deleteWorkspace(workspace.id);
+        await deleteWorkspace(workspace.workspace_id);
 
         navigate("/");
-
     };
 
     const menuActions = [
@@ -58,7 +54,6 @@ export default function WorkspaceDelete() {
     if (!workspace) {
 
         return (
-
             <div className="p-4">
 
                 <TopMenu actions={menuActions} />
@@ -68,16 +63,13 @@ export default function WorkspaceDelete() {
                 </div>
 
             </div>
-
         );
-
     }
 
     const canDelete =
-        confirmText === workspace.name;
+        confirmText === workspace.workspace_title;
 
     return (
-
         <div className="p-4 flex flex-col gap-6">
 
             <TopMenu actions={menuActions} />
@@ -85,17 +77,13 @@ export default function WorkspaceDelete() {
             <div>
 
                 <div className="text-2xl font-bold">
-
                     Delete Workspace
-
                 </div>
 
                 <div className="mt-2 text-neutral-400">
-
                     This removes the saved workspace only.
                     <br />
                     Your notes will remain untouched.
-
                 </div>
 
             </div>
@@ -111,25 +99,19 @@ export default function WorkspaceDelete() {
             >
 
                 <div className="text-lg font-medium">
-
-                    {workspace.name}
-
+                    {workspace.workspace_title}
                 </div>
 
                 <div className="mt-3 text-sm text-neutral-400">
-
-                    {workspace.tags
+                    {(workspace.workspace_tags || [])
                         .map(tag => `#${tag}`)
                         .join(" ")}
-
                 </div>
 
             </div>
 
             <div className="text-sm opacity-70">
-
                 Type the workspace name to confirm.
-
             </div>
 
             <input
@@ -146,7 +128,7 @@ export default function WorkspaceDelete() {
                 onChange={(e) =>
                     setConfirmText(e.target.value)
                 }
-                placeholder={workspace.name}
+                placeholder={workspace.workspace_title}
             />
 
             <button
@@ -160,13 +142,9 @@ export default function WorkspaceDelete() {
                 disabled={!canDelete}
                 onClick={handleDelete}
             >
-
                 Delete Workspace
-
             </button>
 
         </div>
-
     );
-
 }

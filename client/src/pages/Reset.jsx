@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 
 import TopMenu from "../components/TopMenu";
 
-import { deleteAllNotes } from "../hooks/useNotes";
-import { deleteAllWorkspaces } from "../utils/WorkspaceUtil";
+import { resetAccount } from "../composites/account.composite";
 
 import { useLoading } from "../context/LoadingContext";
 
 export default function Reset() {
+
     const navigate = useNavigate();
     const { showLoading, hideLoading } = useLoading();
 
@@ -20,20 +20,21 @@ export default function Reset() {
      * RESET ACTION
      */
     const handleReset = async () => {
+
         if (confirmText !== RESET_PHRASE) return;
 
-        showLoading("Deleting all data...");
+        showLoading("Resetting account...");
 
         try {
-            await Promise.all([
-                deleteAllNotes(),
-                deleteAllWorkspaces()
-            ]);
+
+            await resetAccount();
 
             navigate("/");
+
         } finally {
             hideLoading();
         }
+
     };
 
     const menuActions = [

@@ -8,11 +8,12 @@ import NoteCard from "../components/NoteCard";
 import {
     getAllNotes,
     getNotesByTag
-} from "../hooks/useNotes";
+} from "../composites/note.composite";
 
 import { useLoading } from "../context/LoadingContext";
 
 export default function Editor() {
+
     const { tags } = useParams();
     const navigate = useNavigate();
 
@@ -20,11 +21,11 @@ export default function Editor() {
 
     const [notes, setNotes] = useState([]);
 
-    /**
-     * SORT STATE (created_at only)
-     */
     const [sortMode, setSortMode] = useState("created-desc");
 
+    /**
+     * Parse route tags → normalized array
+     */
     const tagList = useMemo(() => {
         if (!tags) return [];
 
@@ -37,22 +38,35 @@ export default function Editor() {
     }, [tags]);
 
     /**
-     * LOAD WORKSPACE
+     * LOAD NOTES (workspace view)
      */
     const loadWorkspace = useCallback(async () => {
+
         showLoading("Loading workspace...");
 
         try {
+
             let data;
 
+            /**
+             * CASE 1: no tags → full note list
+             */
             if (tagList.length === 0) {
+
                 data = await getAllNotes(sortMode);
+
             } else {
+
+                /**
+                 * CASE 2: tag filtering via IndexedDB
+                 * (intersection logic preserved)
+                 */
                 const groups = await Promise.all(
                     tagList.map(tag => getNotesByTag(tag))
                 );
 
                 data = groups.reduce((acc, current, index) => {
+
                     if (index === 0) return current;
 
                     const ids = new Set(
@@ -62,13 +76,18 @@ export default function Editor() {
                     return acc.filter(note =>
                         ids.has(note.note_id)
                     );
+
                 }, []);
 
-                // apply sorting locally for filtered results
+                /**
+                 * Local sort fallback (filtered sets)
+                 */
                 data.sort((a, b) => {
+
                     if (sortMode === "created-asc") {
                         return a.note_created_at - b.note_created_at;
                     }
+
                     return b.note_created_at - a.note_created_at;
                 });
             }
@@ -86,7 +105,7 @@ export default function Editor() {
     }, [loadWorkspace]);
 
     /**
-     * TOGGLE DATE SORT
+     * TOGGLE SORT ORDER
      */
     const toggleDateSort = () => {
         setSortMode(prev =>

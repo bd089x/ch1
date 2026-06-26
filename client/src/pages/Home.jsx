@@ -5,61 +5,37 @@ import TopMenu from "../components/TopMenu";
 import WorkspaceCard from "../components/WorkspaceCard";
 import TagCard from "../components/TagCard";
 
-import { getAllTags, createNote } from "../hooks/useNotes";
-import { getWorkspaces } from "../utils/WorkspaceUtil";
+import { getAllTags, createNote } from "../composites/note.composite";
+import { getAllWorkspaces } from "../composites/workspace.composite";
 
 import { useLoading } from "../context/LoadingContext";
 
 export default function Home() {
-    const navigate = useNavigate();
 
+    const navigate = useNavigate();
     const { showLoading, hideLoading } = useLoading();
 
     const [tags, setTags] = useState([]);
     const [workspaces, setWorkspaces] = useState([]);
 
-    /**
-     * WORKSPACE SORT STATE
-     */
     const [workspaceSort, setWorkspaceSort] = useState("created-desc");
 
     /**
      * LOAD HOME DATA
      */
     const load = async () => {
+
         showLoading("Loading...");
 
         try {
-            const [tagData] = await Promise.all([
-                getAllTags()
+
+            const [tagData, wsData] = await Promise.all([
+                getAllTags(),
+                getAllWorkspaces(workspaceSort)
             ]);
 
-            let ws = getWorkspaces();
-
-            /**
-             * SORT WORKSPACES
-             */
-            ws = [...ws].sort((a, b) => {
-                switch (workspaceSort) {
-                    case "created-asc":
-                        return a.created_at - b.created_at;
-
-                    case "created-desc":
-                        return b.created_at - a.created_at;
-
-                    case "title-asc":
-                        return a.name.localeCompare(b.name);
-
-                    case "title-desc":
-                        return b.name.localeCompare(a.name);
-
-                    default:
-                        return b.created_at - a.created_at;
-                }
-            });
-
             setTags(tagData);
-            setWorkspaces(ws);
+            setWorkspaces(wsData);
 
         } finally {
             hideLoading();
@@ -74,9 +50,11 @@ export default function Home() {
      * QUICK INBOX NOTE
      */
     const handleNew = async () => {
+
         showLoading("Creating inbox note...");
 
         try {
+
             await createNote({
                 note_content: `#inbox\n\n`
             });
@@ -91,7 +69,7 @@ export default function Home() {
     };
 
     /**
-     * TOGGLE SORT MODES
+     * SORT TOGGLES
      */
     const toggleDateSort = () => {
         setWorkspaceSort(prev =>
@@ -111,11 +89,15 @@ export default function Home() {
 
     const menuActions = [
         {
-            label: `Date ${workspaceSort.startsWith("created") ? (workspaceSort === "created-desc" ? "↓" : "↑") : ""}`,
+            label: `Date ${workspaceSort.startsWith("created")
+                ? (workspaceSort === "created-desc" ? "↓" : "↑")
+                : ""}`,
             onClick: toggleDateSort
         },
         {
-            label: `Title ${workspaceSort.startsWith("title") ? (workspaceSort === "title-asc" ? "↑" : "↓") : ""}`,
+            label: `Title ${workspaceSort.startsWith("name")
+                ? (workspaceSort === "title-asc" ? "↑" : "↓")
+                : ""}`,
             onClick: toggleTitleSort
         },
         {
@@ -153,7 +135,7 @@ export default function Home() {
                     ) : (
                         workspaces.map(workspace => (
                             <WorkspaceCard
-                                key={workspace.id}
+                                key={workspace.workspace_id}
                                 workspace={workspace}
                             />
                         ))

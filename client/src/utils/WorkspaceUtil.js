@@ -14,7 +14,7 @@ const STORAGE_KEY = "chalk-workspaces";
  *   }
  * ]
  */
-export function getWorkspaces() {
+export function getAllWorkspaces() {
     try {
         const data = JSON.parse(
             localStorage.getItem(STORAGE_KEY) || "[]"
@@ -31,7 +31,7 @@ export function getWorkspaces() {
  * Get one workspace.
  */
 export function getWorkspace(id) {
-    return getWorkspaces().find(
+    return getAllWorkspaces().find(
         workspace => workspace.id === id
     ) || null;
 }
@@ -43,7 +43,7 @@ export function createWorkspace({
     name,
     tags = []
 }) {
-    const workspaces = getWorkspaces();
+    const workspaces = getAllWorkspaces();
     const now = Date.now();
 
     const workspace = {
@@ -82,7 +82,7 @@ export function createWorkspace({
  * Update a workspace.
  */
 export function updateWorkspace(id, data = {}) {
-    const workspaces = getWorkspaces();
+    const workspaces = getAllWorkspaces();
 
     const index = workspaces.findIndex(
         workspace => workspace.id === id
@@ -133,7 +133,7 @@ export function updateWorkspace(id, data = {}) {
  * Delete a workspace.
  */
 export function deleteWorkspace(id) {
-    const workspaces = getWorkspaces().filter(
+    const workspaces = getAllWorkspaces().filter(
         workspace => workspace.id !== id
     );
 

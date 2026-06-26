@@ -4,10 +4,9 @@ import { useEffect, useState } from "react";
 import { useLoading } from "../context/LoadingContext";
 
 import {
-    getAllNotes,
-    exportData,
-    importData
-} from "../hooks/useNotes";
+    exportAccount,
+    importAccount
+} from "../composites/account.composite";
 
 const BUILD_TIME = __BUILD_TIME__;
 
@@ -19,7 +18,7 @@ export default function Settings() {
     const [notes, setNotes] = useState([]);
 
     /**
-     * LOAD NOTES (for optional UI/debug stats)
+     * LOAD NOTES (optional stats/debug via export snapshot)
      */
     useEffect(() => {
 
@@ -28,14 +27,11 @@ export default function Settings() {
             showLoading("Loading settings...");
 
             try {
+                const data = await exportAccount();
 
-                const data = await getAllNotes();
-                setNotes(data);
-
+                setNotes(data?.notes || []);
             } finally {
-
                 hideLoading();
-
             }
 
         };
@@ -62,15 +58,15 @@ export default function Settings() {
     };
 
     /**
-     * EXPORT DATABASE (JSON DOWNLOAD)
+     * EXPORT FULL ACCOUNT DATA (notes + workspaces)
      */
     const handleExport = async () => {
 
-        showLoading("Exporting notes...");
+        showLoading("Exporting account...");
 
         try {
 
-            const data = await exportData();
+            const data = await exportAccount();
 
             const blob = new Blob(
                 [JSON.stringify(data, null, 2)],
@@ -81,33 +77,29 @@ export default function Settings() {
 
             const a = document.createElement("a");
             a.href = url;
-            a.download = `chalk-backup-${Date.now()}.json`;
+            a.download = `chalk-account-backup-${Date.now()}.json`;
             a.click();
 
             URL.revokeObjectURL(url);
 
         } finally {
-
             hideLoading();
-
         }
 
     };
 
     /**
-     * IMPORT DATABASE (JSON FILE)
+     * IMPORT FULL ACCOUNT DATA
      */
     const handleImport = async (event) => {
 
-        showLoading("Importing notes...");
+        showLoading("Importing account...");
 
         const file = event.target.files?.[0];
 
         if (!file) {
-
             hideLoading();
             return;
-
         }
 
         try {
@@ -117,19 +109,12 @@ export default function Settings() {
             let parsed;
 
             try {
-
                 parsed = JSON.parse(text);
-
             } catch {
-
                 throw new Error("Invalid backup file");
-
             }
 
-            await importData(parsed, "replace");
-
-            const updated = await getAllNotes();
-            setNotes(updated);
+            await importAccount(parsed, "replace");
 
             navigate("/");
 
@@ -152,7 +137,6 @@ export default function Settings() {
     ];
 
     return (
-
         <div className="p-4 flex flex-col gap-6">
 
             <TopMenu actions={menuActions} />
@@ -170,16 +154,13 @@ export default function Settings() {
                         text-left
                     "
                 >
-
                     <span className="font-medium">
-                        Export Backup
+                        Export Account
                     </span>
 
                     <span className="text-xs opacity-60">
-                        Download full database as a JSON file. Includes all notes,
-                        tags, and metadata.
+                        Download full account backup including notes and workspaces.
                     </span>
-
                 </button>
 
                 {/* IMPORT */}
@@ -193,13 +174,12 @@ export default function Settings() {
                         cursor-pointer
                     "
                 >
-
                     <span className="font-medium">
-                        Import Backup
+                        Import Account
                     </span>
 
                     <span className="text-xs opacity-60">
-                        Restore notes from a previously exported JSON backup.
+                        Restore full backup including notes and workspaces.
                     </span>
 
                     <input
@@ -208,7 +188,6 @@ export default function Settings() {
                         className="hidden"
                         onChange={handleImport}
                     />
-
                 </label>
 
                 {/* RESET */}
@@ -224,28 +203,22 @@ export default function Settings() {
                         hover:border-red-500
                     "
                 >
-
                     <span className="font-medium text-red-500">
                         Reset App
                     </span>
 
                     <span className="text-xs opacity-60">
-                        Permanently delete all notes and restore clean state.
+                        Permanently delete all account data and restore clean state.
                     </span>
-
                 </button>
 
             </div>
 
             {/* BUILD INFO */}
             <div className="text-xs opacity-40 text-center pt-6">
-
                 Built: {formatBuildTime(BUILD_TIME)}
-
             </div>
 
         </div>
-
     );
-
 }

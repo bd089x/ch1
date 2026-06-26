@@ -6,7 +6,7 @@ import TopMenu from "../components/TopMenu";
 import {
     getWorkspace,
     updateWorkspace
-} from "../utils/WorkspaceUtil";
+} from "../composites/workspace.composite";
 
 export default function WorkspaceUpdate() {
 
@@ -16,26 +16,35 @@ export default function WorkspaceUpdate() {
     const [name, setName] = useState("");
     const [tags, setTags] = useState("");
 
+    /**
+     * LOAD WORKSPACE
+     */
     useEffect(() => {
 
-        const workspace = getWorkspace(id);
+        const load = async () => {
+            const workspace = await getWorkspace(id);
 
-        if (!workspace) return;
+            if (!workspace) return;
 
-        setName(workspace.name);
+            setName(workspace.workspace_title);
 
-        setTags(
-            workspace.tags
-                .map(tag => `#${tag}`)
-                .join(" ")
-        );
+            setTags(
+                (workspace.workspace_tags || [])
+                    .map(tag => `#${tag}`)
+                    .join(" ")
+            );
+        };
+
+        load();
 
     }, [id]);
 
-    const handleSave = () => {
+    /**
+     * SAVE WORKSPACE
+     */
+    const handleSave = async () => {
 
         const workspaceName = name.trim();
-
         if (!workspaceName) return;
 
         const tagList = tags
@@ -50,13 +59,12 @@ export default function WorkspaceUpdate() {
 
         if (!tagList.length) return;
 
-        updateWorkspace(id, {
+        await updateWorkspace(id, {
             name: workspaceName,
             tags: tagList
         });
 
         navigate("/");
-
     };
 
     const menuActions = [
@@ -71,7 +79,6 @@ export default function WorkspaceUpdate() {
         tags.trim().length > 0;
 
     return (
-
         <div className="p-4 flex flex-col gap-6">
 
             <TopMenu actions={menuActions} />
@@ -138,7 +145,5 @@ export default function WorkspaceUpdate() {
             </button>
 
         </div>
-
     );
-
 }
