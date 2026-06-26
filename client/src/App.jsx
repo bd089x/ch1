@@ -1,12 +1,14 @@
 import { Routes, Route } from "react-router-dom";
+import LoadingOverlay from "./components/LoadingOverlay";
 
 import Home from "./pages/Home";
 import Editor from "./pages/Editor";
 import Settings from "./pages/Settings";
 import Delete from "./pages/Delete";
 import Reset from "./pages/Reset";
-
-import LoadingOverlay from "./components/LoadingOverlay";
+import WorkspaceCreate from "./pages/WorkspaceCreate";
+import WorkspaceDelete from "./pages/WorkspaceDelete";
+import WorkspaceUpdate from "./pages/WorkspaceUpdate";
 
 export default function App() {
     return (
@@ -19,6 +21,21 @@ export default function App() {
                 <Route
                     path="/"
                     element={<Home />}
+                />
+
+                <Route
+                    path="/workspace/create"
+                    element={<WorkspaceCreate />}
+                />
+
+                <Route
+                    path="/workspace/update/:id"
+                    element={<WorkspaceUpdate />}
+                />
+
+                <Route
+                    path="/workspace/delete/:id"
+                    element={<WorkspaceDelete />}
                 />
 
                 {/* Empty workspace */}

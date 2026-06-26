@@ -1,3 +1,6 @@
+- adding a title and date, ascending/descending to workspaces
+- adding a date, ascending/descending to getAllTags along with pagination
+__
 - color by tag, combined color if multiple tags combine
 - a search for words within the content for given tags
 

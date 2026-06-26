@@ -20,16 +20,25 @@ export default function Editor() {
 
     const [notes, setNotes] = useState([]);
 
+    /**
+     * SORT STATE (created_at only)
+     */
+    const [sortMode, setSortMode] = useState("created-desc");
+
     const tagList = useMemo(() => {
         if (!tags) return [];
 
         return tags
             .split(",")
-            .map(tag => tag.trim().replace(/^#/, "").toLowerCase())
+            .map(tag =>
+                tag.trim().replace(/^#/, "").toLowerCase()
+            )
             .filter(Boolean);
-
     }, [tags]);
 
+    /**
+     * LOAD WORKSPACE
+     */
     const loadWorkspace = useCallback(async () => {
         showLoading("Loading workspace...");
 
@@ -37,9 +46,8 @@ export default function Editor() {
             let data;
 
             if (tagList.length === 0) {
-                data = await getAllNotes();
+                data = await getAllNotes(sortMode);
             } else {
-                // Intersect all requested tags.
                 const groups = await Promise.all(
                     tagList.map(tag => getNotesByTag(tag))
                 );
@@ -54,8 +62,15 @@ export default function Editor() {
                     return acc.filter(note =>
                         ids.has(note.note_id)
                     );
-
                 }, []);
+
+                // apply sorting locally for filtered results
+                data.sort((a, b) => {
+                    if (sortMode === "created-asc") {
+                        return a.note_created_at - b.note_created_at;
+                    }
+                    return b.note_created_at - a.note_created_at;
+                });
             }
 
             setNotes(data);
@@ -64,13 +79,28 @@ export default function Editor() {
             hideLoading();
         }
 
-    }, [tagList, showLoading, hideLoading]);
+    }, [tagList, sortMode, showLoading, hideLoading]);
 
     useEffect(() => {
         loadWorkspace();
     }, [loadWorkspace]);
 
+    /**
+     * TOGGLE DATE SORT
+     */
+    const toggleDateSort = () => {
+        setSortMode(prev =>
+            prev === "created-desc"
+                ? "created-asc"
+                : "created-desc"
+        );
+    };
+
     const menuActions = [
+        {
+            label: `Date ${sortMode === "created-desc" ? "↓" : "↑"}`,
+            onClick: toggleDateSort
+        },
         {
             label: "Back",
             onClick: () => navigate("/")
@@ -87,17 +117,13 @@ export default function Editor() {
                 onCreated={loadWorkspace}
             />
 
-
-                {notes.map(note => (
-
-                    <NoteCard
-                        key={note.note_id}
-                        note={note}
-                        onDeleted={loadWorkspace}
-                    />
-
-                ))}
-
+            {notes.map(note => (
+                <NoteCard
+                    key={note.note_id}
+                    note={note}
+                    onDeleted={loadWorkspace}
+                />
+            ))}
 
         </div>
     );

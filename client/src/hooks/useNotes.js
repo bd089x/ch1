@@ -153,7 +153,7 @@ export async function getNote(note_id) {
  * Get all notes with a given tag.
  * Pass either "react" or "#react".
  */
-export async function getNotesByTag(tag) {
+export async function getNotesByTag(tag, sort = "created-desc") {
     const db = await openDB();
 
     tag = tag.replace(/^#/, "").toLowerCase();
@@ -166,7 +166,28 @@ export async function getNotesByTag(tag) {
 
         const request = index.getAll(tag);
 
-        request.onsuccess = () => resolve(request.result || []);
+        request.onsuccess = () => {
+
+            const notes = request.result || [];
+
+            notes.sort((a, b) => {
+
+                switch (sort) {
+
+                    case "created-asc":
+                        return (a.note_created_at || 0) - (b.note_created_at || 0);
+
+                    case "created-desc":
+                    default:
+                        return (b.note_created_at || 0) - (a.note_created_at || 0);
+
+                }
+
+            });
+
+            resolve(notes);
+        };
+
         request.onerror = () => reject(request.error);
     });
 }

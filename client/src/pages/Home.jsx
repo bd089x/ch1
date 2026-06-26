@@ -2,11 +2,17 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import TopMenu from "../components/TopMenu";
+import WorkspaceCard from "../components/WorkspaceCard";
+import TagCard from "../components/TagCard";
 
 import {
     getAllTags,
     createNote
 } from "../hooks/useNotes";
+
+import {
+    getWorkspaces
+} from "../utils/WorkspaceUtil";
 
 import { useLoading } from "../context/LoadingContext";
 
@@ -20,16 +26,23 @@ export default function Home() {
     } = useLoading();
 
     const [tags, setTags] = useState([]);
+    const [workspaces, setWorkspaces] = useState([]);
 
-    const loadTags = async () => {
+    /**
+     * LOAD HOME DATA
+     */
+    const load = async () => {
 
-        showLoading("Loading workspaces...");
+        showLoading("Loading...");
 
         try {
 
-            const data = await getAllTags();
+            const [tagData] = await Promise.all([
+                getAllTags()
+            ]);
 
-            setTags(data);
+            setTags(tagData);
+            setWorkspaces(getWorkspaces());
 
         } finally {
 
@@ -40,9 +53,12 @@ export default function Home() {
     };
 
     useEffect(() => {
-        loadTags();
+        load();
     }, []);
 
+    /**
+     * QUICK INBOX NOTE
+     */
     const handleNew = async () => {
 
         showLoading("Creating inbox note...");
@@ -50,15 +66,13 @@ export default function Home() {
         try {
 
             await createNote({
-
                 note_content:
 `#inbox
 
 `
-
             });
 
-            await loadTags();
+            await load();
 
             navigate("/editor/inbox");
 
@@ -73,8 +87,15 @@ export default function Home() {
     const menuActions = [
 
         {
+            label: "Workspace",
+            onClick: () =>
+                navigate("/workspace/create")
+        },
+
+        {
             label: "Settings",
-            onClick: () => navigate("/settings")
+            onClick: () =>
+                navigate("/settings")
         },
 
         {
@@ -86,54 +107,80 @@ export default function Home() {
 
     return (
 
-        <div className="w-full p-4">
+        <div className="w-full max-w-3xl mx-auto p-6">
 
             <TopMenu actions={menuActions} />
 
-            <div className="flex flex-col gap-2">
+            {/* WORKSPACES */}
 
-                {tags.map(({ tag, count }) => (
+            <section className="mt-8">
 
-                    <button
-                        key={tag}
-                        className="
-                            btn
-                            btn-outline
-                            w-full
-                            justify-between
-                        "
-                        onClick={() =>
-                            navigate(`/editor/${tag}`)
-                        }
-                    >
+                <h2 className="text-xl font-semibold mb-5">
+                    Workspaces
+                </h2>
 
-                        <span>
-                            #{tag}
-                        </span>
+                <div className="flex flex-col gap-3">
 
-                        <span className="opacity-60">
-                            {count}
-                        </span>
+                    {workspaces.length === 0 ? (
 
-                    </button>
+                        <div className="text-neutral-500">
 
-                ))}
+                            No saved workspaces.
 
-                {tags.length === 0 && (
+                        </div>
 
-                    <div className="text-center opacity-50 py-12">
+                    ) : (
 
-                        No workspaces yet.
+                        workspaces.map(workspace => (
 
-                        <br />
+                            <WorkspaceCard
+                                key={workspace.id}
+                                workspace={workspace}
+                            />
 
-                        Press <strong>New</strong> to create your first note.
+                        ))
 
-                    </div>
+                    )}
 
-                )}
+                </div>
 
-            </div>
+            </section>
+
+            {/* TAGS */}
+
+            <section className="mt-12">
+
+                <h2 className="text-xl font-semibold mb-5">
+                    Tags
+                </h2>
+
+                <div className="flex flex-col gap-3">
+
+                    {tags.length === 0 ? (
+
+                        <div className="text-neutral-500">
+
+                            No tags yet.
+
+                        </div>
+
+                    ) : (
+
+                        tags.map(({ tag, count }) => (
+
+                            <TagCard
+                                key={tag}
+                                tag={tag}
+                                count={count}
+                            />
+
+                        ))
+
+                    )}
+
+                </div>
+
+            </section>
 
         </div>
 
