@@ -1,3 +1,8 @@
+- develop testing for data structure integrity and decoupling
+__
+- convert workspaces for indexdb models ❤️
+- separate concerns into db, services and composites ❤️
+__
 - future pagination for notes of getAllTags
 __
 - adding a title and date, ascending/descending to workspaces ❤️

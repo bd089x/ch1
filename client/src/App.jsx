@@ -4,7 +4,6 @@ import LoadingOverlay from "./components/LoadingOverlay";
 import Home from "./pages/Home";
 import Editor from "./pages/Editor";
 import Settings from "./pages/Settings";
-import Delete from "./pages/Delete";
 import Reset from "./pages/Reset";
 import WorkspaceCreate from "./pages/WorkspaceCreate";
 import WorkspaceDelete from "./pages/WorkspaceDelete";
@@ -48,11 +47,6 @@ export default function App() {
                 <Route
                     path="/editor/:tags"
                     element={<Editor />}
-                />
-
-                <Route
-                    path="/delete/:id"
-                    element={<Delete />}
                 />
 
                 <Route
