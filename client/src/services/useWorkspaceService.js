@@ -1,7 +1,7 @@
 import {
     getStore,
     WORKSPACE_STORE
-} from "../models/db";
+} from "../models/Db";
 
 /**
  * Normalize workspace tags.

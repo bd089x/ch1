@@ -1,5 +1,5 @@
-import * as noteService from "../services/note.service";
-import * as workspaceService from "../services/workspace.service";
+import * as noteService from "../services/useNoteService";
+import * as workspaceService from "../services/useWorkspaceService";
 
 /**
  * Full account export.

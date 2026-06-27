@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import TopMenu from "../components/TopMenu";
-import NewNote from "../components/NewNote";
-import NoteCard from "../components/NoteCard";
+import TopMenu from "../components/TopMenuComponent";
+import NewNote from "../components/NewNoteComponent";
+import NoteCard from "../components/NoteCardComponent";
 
 import {
     getAllNotes,
     getNotesByTag
-} from "../composites/note.composite";
+} from "../composites/useNoteComposite";
 
 import { useLoading } from "../context/LoadingContext";
 

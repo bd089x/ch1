@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import TopMenu from "../components/TopMenu";
+import TopMenu from "../components/TopMenuComponent";
 
-import { resetAccount } from "../composites/account.composite";
+import { resetAccount } from "../composites/useAccountComposite";
 
 import { useLoading } from "../context/LoadingContext";
 

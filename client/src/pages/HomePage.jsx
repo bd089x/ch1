@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import TopMenu from "../components/TopMenu";
-import WorkspaceCard from "../components/WorkspaceCard";
-import TagCard from "../components/TagCard";
+import TopMenu from "../components/TopMenuComponent";
+import WorkspaceCard from "../components/WorkspaceCardComponent";
+import TagCard from "../components/TagCardComponent";
 
-import { getAllTags, createNote } from "../composites/note.composite";
-import { getAllWorkspaces } from "../composites/workspace.composite";
+import { getAllTags, createNote } from "../composites/useNoteComposite";
+import { getAllWorkspaces } from "../composites/useWorkspaceComposite";
 
 import { useLoading } from "../context/LoadingContext";
 

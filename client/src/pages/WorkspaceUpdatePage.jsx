@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import TopMenu from "../components/TopMenu";
+import TopMenu from "../components/TopMenuComponent";
 
 import {
     getWorkspace,
     updateWorkspace
-} from "../composites/workspace.composite";
+} from "../composites/useWorkspaceComposite";
 
 export default function WorkspaceUpdate() {
 

@@ -1,4 +1,4 @@
-import * as noteService from "../services/note.service";
+import * as noteService from "../services/useNoteService";
 
 /**
  * Get every tag along with the number of notes using it.

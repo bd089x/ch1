@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import {
     updateNote,
     deleteNote
-} from "../composites/note.composite";
+} from "../composites/useNoteComposite";
 
 export default function NoteCard({
     note,

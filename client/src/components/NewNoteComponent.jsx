@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { createNote } from "../composites/note.composite";
+import { createNote } from "../composites/useNoteComposite";
 
 export default function NewNote({
     tags = [],

@@ -1,4 +1,4 @@
-import * as workspaceService from "../services/workspace.service";
+import * as workspaceService from "../services/useWorkspaceService";
 
 /**
  * Get every saved workspace.

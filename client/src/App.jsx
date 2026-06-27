@@ -1,13 +1,13 @@
 import { Routes, Route } from "react-router-dom";
-import LoadingOverlay from "./components/LoadingOverlay";
+import LoadingOverlay from "./components/LoadingOverlayComponent";
 
-import Home from "./pages/Home";
-import Editor from "./pages/Editor";
-import Settings from "./pages/Settings";
-import Reset from "./pages/Reset";
-import WorkspaceCreate from "./pages/WorkspaceCreate";
-import WorkspaceDelete from "./pages/WorkspaceDelete";
-import WorkspaceUpdate from "./pages/WorkspaceUpdate";
+import Home from "./pages/HomePage";
+import Editor from "./pages/EditorPage";
+import Settings from "./pages/SettingsPage";
+import Reset from "./pages/ResetPage";
+import WorkspaceCreate from "./pages/WorkspaceCreatePage";
+import WorkspaceDelete from "./pages/WorkspaceDeletePage";
+import WorkspaceUpdate from "./pages/WorkspaceUpdatePage";
 
 export default function App() {
     return (

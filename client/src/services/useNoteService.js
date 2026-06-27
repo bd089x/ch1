@@ -1,7 +1,7 @@
 import {
     getStore,
     NOTE_STORE
-} from "../models/db";
+} from "../models/Db";
 
 /**
  * Extract hashtags from note content.
