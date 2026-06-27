@@ -1,4 +1,4 @@
-const DB_NAME = "chalk-db";
+const DB_NAME = "app_db_01";
 const DB_VERSION = 1;
 
 export const NOTE_STORE = "notes";

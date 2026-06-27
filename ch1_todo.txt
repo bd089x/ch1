@@ -1,3 +1,4 @@
+- changing the file names to be react compliant
 - develop testing for data structure integrity and decoupling
 __
 - convert workspaces for indexdb models ❤️
