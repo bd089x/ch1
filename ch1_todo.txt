@@ -1,3 +1,6 @@
+- workspaces to save upon dismount if text exists
+- add hashtags to new note and add dynamic height
+__
 - changing the file names to be react compliant
 - develop testing for data structure integrity and decoupling
 __

@@ -8,11 +8,20 @@ export default function NewNote({
 
     const [content, setContent] = useState("");
 
-    // keep latest content accessible inside unmount cleanup
     const contentRef = useRef(content);
+    const textareaRef = useRef(null);
 
     useEffect(() => {
         contentRef.current = content;
+    }, [content]);
+
+    // Auto-grow textarea
+    useEffect(() => {
+        if (!textareaRef.current) return;
+
+        textareaRef.current.style.height = "0px";
+        textareaRef.current.style.height =
+            `${textareaRef.current.scrollHeight}px`;
     }, [content]);
 
     const extractTags = (text) => {
@@ -73,7 +82,7 @@ export default function NewNote({
     };
 
     /**
-     * 🔥 SAVE ON UNMOUNT (back navigation / route change)
+     * Save on unmount
      */
     useEffect(() => {
 
@@ -83,12 +92,9 @@ export default function NewNote({
 
             if (!finalContent) return;
 
-            // best-effort fire-and-forget save
             createNote({
                 note_content: finalContent
-            }).catch(() => {
-                // silent fail (user is already leaving)
-            });
+            }).catch(() => {});
 
         };
 
@@ -97,15 +103,30 @@ export default function NewNote({
     return (
         <div className="border border-neutral-700 rounded-lg p-3">
 
-            <div className="text-sm text-neutral-400 mb-2">
-                New Note
+            <div className="flex flex-wrap gap-2 mb-3">
+                {tags.map(tag => (
+                    <span
+                        key={tag}
+                        className="
+                            px-2
+                            py-1
+                            rounded-full
+                            bg-neutral-800
+                            text-neutral-300
+                            text-xs
+                        "
+                    >
+                        {tag.startsWith("#") ? tag : `#${tag}`}
+                    </span>
+                ))}
             </div>
 
             <textarea
+                ref={textareaRef}
                 className="
                     w-full
-                    min-h-32
                     resize-none
+                    overflow-hidden
                     bg-black
                     text-white
                     outline-none
@@ -114,6 +135,7 @@ export default function NewNote({
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Write a new note..."
                 spellCheck={false}
+                rows={1}
             />
 
             <div className="flex justify-end mt-3">
