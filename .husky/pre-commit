@@ -1,2 +1,9 @@
-cd client
-npm test
+echo "Running tests..."
+cd client && npm test
+
+echo "Building client..."
+npm run build
+
+echo "Staging docs..."
+cd ..
+git add docs
