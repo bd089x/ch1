@@ -13,8 +13,8 @@ export default function WorkspaceUpdate() {
     const { id } = useParams();
     const navigate = useNavigate();
 
-    const [name, setName] = useState("");
-    const [tags, setTags] = useState("");
+    const [workspaceTitle, setWorkspaceTitle] = useState("");
+    const [workspaceTags, setWorkspaceTags] = useState("");
 
     /**
      * LOAD WORKSPACE
@@ -26,9 +26,9 @@ export default function WorkspaceUpdate() {
 
             if (!workspace) return;
 
-            setName(workspace.workspace_title);
+            setWorkspaceTitle(workspace.workspace_title);
 
-            setTags(
+            setWorkspaceTags(
                 (workspace.workspace_tags || [])
                     .map(tag => `#${tag}`)
                     .join(" ")
@@ -44,10 +44,10 @@ export default function WorkspaceUpdate() {
      */
     const handleSave = async () => {
 
-        const workspaceName = name.trim();
-        if (!workspaceName) return;
+        const title = workspaceTitle.trim();
+        if (!title) return;
 
-        const tagList = tags
+        const tags = workspaceTags
             .split(/[,\s]+/)
             .map(tag =>
                 tag
@@ -57,11 +57,11 @@ export default function WorkspaceUpdate() {
             )
             .filter(Boolean);
 
-        if (!tagList.length) return;
+        if (!tags.length) return;
 
         await updateWorkspace(id, {
-            name: workspaceName,
-            tags: tagList
+            workspace_title: title,
+            workspace_tags: tags
         });
 
         navigate("/");
@@ -75,8 +75,8 @@ export default function WorkspaceUpdate() {
     ];
 
     const canSave =
-        name.trim().length > 0 &&
-        tags.trim().length > 0;
+        workspaceTitle.trim().length > 0 &&
+        workspaceTags.trim().length > 0;
 
     return (
         <div className="p-4 flex flex-col gap-6">
@@ -103,9 +103,9 @@ export default function WorkspaceUpdate() {
                         rounded-lg
                         text-white
                     "
-                    value={name}
+                    value={workspaceTitle}
                     onChange={(e) =>
-                        setName(e.target.value)
+                        setWorkspaceTitle(e.target.value)
                     }
                 />
 
@@ -121,9 +121,9 @@ export default function WorkspaceUpdate() {
                         text-white
                         resize-none
                     "
-                    value={tags}
+                    value={workspaceTags}
                     onChange={(e) =>
-                        setTags(e.target.value)
+                        setWorkspaceTags(e.target.value)
                     }
                     spellCheck={false}
                 />

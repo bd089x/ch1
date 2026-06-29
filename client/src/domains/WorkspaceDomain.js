@@ -71,9 +71,9 @@ export function buildWorkspace(
     return {
         workspace_id: id,
 
-        workspace_title: (data.name || "Untitled").trim(),
+        workspace_title: (data.workspace_title || "Untitled").trim(),
 
-        workspace_tags: normalizeTags(data.tags),
+        workspace_tags: normalizeTags(data.workspace_tags),
 
         workspace_created_at: now,
         workspace_updated_at: now
@@ -88,12 +88,12 @@ export function updateWorkspaceRecord(existing, data = {}) {
     const updated = {
         ...existing,
 
-        ...(data.name !== undefined && {
-            workspace_title: data.name.trim()
+        ...(data.workspace_title !== undefined && {
+            workspace_title: data.workspace_title.trim()
         }),
 
-        ...(data.tags !== undefined && {
-            workspace_tags: normalizeTags(data.tags)
+        ...(data.workspace_tags !== undefined && {
+            workspace_tags: normalizeTags(data.workspace_tags)
         }),
 
         workspace_updated_at: Date.now()

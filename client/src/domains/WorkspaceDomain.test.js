@@ -111,8 +111,8 @@ describe("WorkspaceDomain", () => {
 
             const workspace = buildWorkspace(
                 {
-                    name: "Notes",
-                    tags: ["#React", "js", "JS"]
+                    workspace_title: "Notes",
+                    workspace_tags: ["#React", "js", "JS"]
                 },
                 {
                     now: 123,
@@ -130,10 +130,12 @@ describe("WorkspaceDomain", () => {
 
         });
 
-        it("uses Untitled when name missing", () => {
+        it("uses Untitled when workspace_title missing", () => {
 
             const workspace = buildWorkspace(
-                { tags: ["react"] },
+                {
+                    workspace_tags: ["react"]
+                },
                 {
                     now: 123,
                     id: "x1"
@@ -151,7 +153,7 @@ describe("WorkspaceDomain", () => {
     // -----------------------------
     describe("updateWorkspaceRecord", () => {
 
-        it("updates name and tags when provided", () => {
+        it("updates workspace_title and workspace_tags when provided", () => {
 
             const existing = {
                 workspace_id: "1",
@@ -162,8 +164,8 @@ describe("WorkspaceDomain", () => {
             };
 
             const updated = updateWorkspaceRecord(existing, {
-                name: "New Name",
-                tags: ["#react", "js"]
+                workspace_title: "New Name",
+                workspace_tags: ["#react", "js"]
             });
 
             expect(updated.workspace_title).to.equal("New Name");
@@ -182,7 +184,7 @@ describe("WorkspaceDomain", () => {
             };
 
             const updated = updateWorkspaceRecord(existing, {
-                name: "Updated Only"
+                workspace_title: "Updated Only"
             });
 
             expect(updated.workspace_title).to.equal("Updated Only");
