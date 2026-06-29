@@ -1,8 +1,12 @@
+- adding consistent shapes for requests and responses for api
+__
+- developing a settings system, integrated into export, import ❤️
+__
 - workspaces to save upon dismount if text exists ❤️
 - add hashtags to new note and add dynamic height ❤️
 __
 - changing the file names to be react compliant ❤️
-- develop testing for data structure integrity and decoupling
+- develop testing for data structure integrity and decoupling ❤️
 __
 - convert workspaces for indexdb models ❤️
 - separate concerns into db, services and composites ❤️

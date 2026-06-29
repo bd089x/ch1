@@ -114,7 +114,7 @@ export default function Settings() {
                 throw new Error("Invalid backup file");
             }
 
-            await importAccount(parsed, "replace");
+            await importAccount(parsed);
 
             navigate("/");
 

@@ -47,9 +47,8 @@ describe("SettingsUtil", () => {
 
             const settings = SettingsUtil.getSettings();
 
-            expect(settings).to.deep.include({
-                version: 1
-            });
+            expect(settings.version)
+                .to.equal(SettingsUtil.SETTINGS_VERSION);
 
             expect(settings.home.workspace_sort)
                 .to.equal("created-desc");
@@ -229,15 +228,17 @@ describe("normalizeImportedSettings", () => {
         const result =
             SettingsUtil.normalizeImportedSettings({});
 
-        expect(result).to.deep.equal({
-            version: 1,
-            home: {
-                workspace_sort: "created-desc",
-                workspace_recent: []
-            },
-            editor: {},
-            appearance: {}
-        });
+        expect(result.version)
+            .to.equal(SettingsUtil.SETTINGS_VERSION);
+
+        expect(result.home.workspace_sort)
+            .to.equal("created-desc");
+
+        expect(result.home.workspace_recent)
+            .to.deep.equal([]);
+
+        expect(result.editor).to.deep.equal({});
+        expect(result.appearance).to.deep.equal({});
 
     });
 
@@ -285,14 +286,15 @@ describe("normalizeImportedSettings", () => {
 
     });
 
-    it("ensures version fallback when missing", () => {
+    it("always uses current settings version", () => {
 
         const result =
             SettingsUtil.normalizeImportedSettings({
-                version: undefined
+                version: 999
             });
 
-        expect(result.version).to.equal(1);
+        expect(result.version)
+            .to.equal(SettingsUtil.SETTINGS_VERSION);
 
     });
 

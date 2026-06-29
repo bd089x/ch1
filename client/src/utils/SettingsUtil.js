@@ -5,7 +5,7 @@
  */
 
 const STORAGE_KEY = "app_settings";
-const SETTINGS_VERSION = 1;
+export const SETTINGS_VERSION = 1;
 
 /**
  * Default settings structure
@@ -22,6 +22,39 @@ const DEFAULT_SETTINGS = {
 
     appearance: {}
 };
+
+/**
+ * Apply full settings schema normalization.
+ *
+ * Used for BOTH:
+ * - reading from storage
+ * - importing external data
+ */
+function applySettingsSchema(input = {}) {
+
+    return {
+        ...DEFAULT_SETTINGS,
+
+        ...input,
+
+        version: SETTINGS_VERSION,
+
+        home: {
+            ...DEFAULT_SETTINGS.home,
+            ...(input.home || {})
+        },
+
+        editor: {
+            ...DEFAULT_SETTINGS.editor,
+            ...(input.editor || {})
+        },
+
+        appearance: {
+            ...DEFAULT_SETTINGS.appearance,
+            ...(input.appearance || {})
+        }
+    };
+}
 
 /**
  * Read raw settings from localStorage
@@ -53,40 +86,11 @@ function writeSettings(settings) {
 }
 
 /**
- * Deep merge for known structure
- */
-function mergeSettings(stored) {
-
-    return {
-        ...DEFAULT_SETTINGS,
-
-        ...stored,
-
-        version: SETTINGS_VERSION,
-
-        home: {
-            ...DEFAULT_SETTINGS.home,
-            ...(stored.home || {})
-        },
-
-        editor: {
-            ...DEFAULT_SETTINGS.editor,
-            ...(stored.editor || {})
-        },
-
-        appearance: {
-            ...DEFAULT_SETTINGS.appearance,
-            ...(stored.appearance || {})
-        }
-    };
-}
-
-/**
  * Get full settings object
  */
 export function getSettings() {
     const stored = readRawSettings();
-    return mergeSettings(stored);
+    return applySettingsSchema(stored);
 }
 
 /**
@@ -181,23 +185,5 @@ export function setWorkspaceSort(sort) {
  * - version is always valid
  */
 export function normalizeImportedSettings(settings = {}) {
-
-    return {
-        version: settings.version || 1,
-
-        home: {
-            workspace_sort: "created-desc",
-            workspace_recent: [],
-            ...(settings.home || {})
-        },
-
-        editor: {
-            ...(settings.editor || {})
-        },
-
-        appearance: {
-            ...(settings.appearance || {})
-        }
-    };
-
+    return applySettingsSchema(settings);
 }
