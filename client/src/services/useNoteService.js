@@ -7,7 +7,8 @@ import {
     buildNote,
     countTags,
     sortNotes,
-    updateNoteRecord
+    updateNoteRecord,
+    restoreNoteRecord
 } from "../domains/NotesDomain";
 
 import {
@@ -226,4 +227,35 @@ export async function deleteAllNotes() {
             reject(request.error);
 
     });
+}
+
+/**
+ * Restore note (used for import/export or syncing).
+ *
+ * Unlike createNote:
+ * - preserves note_id
+ * - preserves timestamps
+ * - does NOT re-generate tags or content structure
+ */
+export async function restoreNote(data = {}) {
+
+    const { store } = await getStore(
+        NOTE_STORE,
+        "readwrite"
+    );
+
+    const note = restoreNoteRecord(data);
+
+    return new Promise((resolve, reject) => {
+
+        const request = store.put(note);
+
+        request.onsuccess = () =>
+            resolve(note);
+
+        request.onerror = () =>
+            reject(request.error);
+
+    });
+
 }

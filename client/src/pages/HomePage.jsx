@@ -10,6 +10,11 @@ import { getAllWorkspaces } from "../composites/useWorkspaceComposite";
 
 import { useLoading } from "../context/LoadingContext";
 
+import {
+    getHomeSettings,
+    saveHomeSettings
+} from "../utils/SettingsUtil";
+
 export default function Home() {
 
     const navigate = useNavigate();
@@ -18,7 +23,12 @@ export default function Home() {
     const [tags, setTags] = useState([]);
     const [workspaces, setWorkspaces] = useState([]);
 
-    const [workspaceSort, setWorkspaceSort] = useState("created-desc");
+    const [homeSettings, setHomeSettings] = useState(() =>
+        getHomeSettings()
+    );
+
+    const workspaceSort = homeSettings.workspace_sort;
+    const recentWorkspaceIds = homeSettings.workspace_recent;
 
     /**
      * LOAD HOME DATA
@@ -47,6 +57,41 @@ export default function Home() {
     }, [workspaceSort]);
 
     /**
+     * UPDATE SORT
+     */
+    const updateSort = (nextSort) => {
+
+        const updated = {
+            ...homeSettings,
+            workspace_sort: nextSort
+        };
+
+        setHomeSettings(updated);
+        saveHomeSettings(updated);
+
+    };
+
+    const toggleDateSort = () => {
+
+        updateSort(
+            workspaceSort === "created-desc"
+                ? "created-asc"
+                : "created-desc"
+        );
+
+    };
+
+    const toggleTitleSort = () => {
+
+        updateSort(
+            workspaceSort === "title-asc"
+                ? "title-desc"
+                : "title-asc"
+        );
+
+    };
+
+    /**
      * QUICK INBOX NOTE
      */
     const handleNew = async () => {
@@ -66,25 +111,6 @@ export default function Home() {
         } finally {
             hideLoading();
         }
-    };
-
-    /**
-     * SORT TOGGLES
-     */
-    const toggleDateSort = () => {
-        setWorkspaceSort(prev =>
-            prev === "created-desc"
-                ? "created-asc"
-                : "created-desc"
-        );
-    };
-
-    const toggleTitleSort = () => {
-        setWorkspaceSort(prev =>
-            prev === "title-asc"
-                ? "title-desc"
-                : "title-asc"
-        );
     };
 
     const menuActions = [
@@ -114,10 +140,43 @@ export default function Home() {
         }
     ];
 
+    /**
+     * RECENT WORKSPACES
+     */
+    const recentWorkspaces = recentWorkspaceIds
+        .map(id =>
+            workspaces.find(w =>
+                w.workspace_id === id
+            )
+        )
+        .filter(Boolean);
+
     return (
         <div className="w-full max-w-3xl mx-auto p-6">
 
             <TopMenu actions={menuActions} />
+
+            {/* RECENT WORKSPACES */}
+            {recentWorkspaces.length > 0 && (
+                <section className="mt-6">
+
+                    <h2 className="text-xl font-semibold mb-5">
+                        Recent
+                    </h2>
+
+                    <div className="flex flex-col gap-3">
+
+                        {recentWorkspaces.map(workspace => (
+                            <WorkspaceCard
+                                key={workspace.workspace_id}
+                                workspace={workspace}
+                            />
+                        ))}
+
+                    </div>
+
+                </section>
+            )}
 
             {/* WORKSPACES */}
             <section className="mt-8">

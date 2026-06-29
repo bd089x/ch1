@@ -1,6 +1,12 @@
 import * as noteService from "../services/useNoteService";
 import * as workspaceService from "../services/useWorkspaceService";
 
+import {
+    getSettings,
+    saveSettings,
+    normalizeImportedSettings
+} from "../utils/SettingsUtil";
+
 /**
  * Full account export.
  *
@@ -9,7 +15,8 @@ import * as workspaceService from "../services/useWorkspaceService";
  *   version: 1,
  *   exported_at: number,
  *   notes: [...],
- *   workspaces: [...]
+ *   workspaces: [...],
+ *   settings: {...}
  * }
  */
 export async function exportAccount() {
@@ -19,29 +26,26 @@ export async function exportAccount() {
         workspaceService.getAllWorkspaces()
     ]);
 
+    const settings = getSettings();
+
     return {
         version: 1,
         exported_at: Date.now(),
+
         notes: notes || [],
-        workspaces: workspaces || []
+        workspaces: workspaces || [],
+        settings
     };
 }
 
 /**
  * Full account import.
  *
- * Expected shape:
- * {
- *   notes: [...],
- *   workspaces: [...],
- *   version?: number
- * }
- *
- * mode:
- * - "replace" → wipe before importing
- * - "merge" → future extension (currently treated same as replace behavior for simplicity)
+ * ALWAYS "replace" mode:
+ * - wipes existing data
+ * - restores full snapshot cleanly
  */
-export async function importAccount(data, mode = "replace") {
+export async function importAccount(data) {
 
     if (!data || typeof data !== "object") {
         throw new Error("Invalid import format");
@@ -49,62 +53,76 @@ export async function importAccount(data, mode = "replace") {
 
     const notes = Array.isArray(data.notes) ? data.notes : [];
     const workspaces = Array.isArray(data.workspaces) ? data.workspaces : [];
+    const settings = data.settings;
 
     const results = {
         notes: null,
-        workspaces: null
+        workspaces: null,
+        settings: null
     };
 
-    // Always start clean for now (merge reserved for future evolution)
-    if (mode === "replace") {
-        await Promise.all([
-            noteService.deleteAllNotes(),
-            workspaceService.deleteAllWorkspaces()
-        ]);
-    }
+    /**
+     * STEP 1 — WIPE EVERYTHING
+     */
+    await Promise.all([
+        noteService.deleteAllNotes(),
+        workspaceService.deleteAllWorkspaces()
+    ]);
 
     /**
-     * IMPORT WORKSPACES FIRST
+     * STEP 2 — RESTORE WORKSPACES
      */
     let workspaceCount = 0;
 
     for (const ws of workspaces) {
 
-        await workspaceService.createWorkspace({
-            name: ws.workspace_title || ws.name || "Untitled",
-            tags: ws.workspace_tags || ws.tags || []
-        });
-
+        await workspaceService.restoreWorkspace(ws);
         workspaceCount++;
+
     }
 
     results.workspaces = {
-        imported: workspaceCount,
-        mode
+        imported: workspaceCount
     };
 
     /**
-     * IMPORT NOTES SECOND
+     * STEP 3 — RESTORE NOTES
      */
     let noteCount = 0;
 
     for (const note of notes) {
 
-        await noteService.createNote({
-            note_content: note.note_content || ""
-        });
-
+        await noteService.restoreNote(note);
         noteCount++;
+
     }
 
     results.notes = {
-        imported: noteCount,
-        mode
+        imported: noteCount
     };
+
+    /**
+     * STEP 4 — RESTORE SETTINGS
+     */
+    if (settings && typeof settings === "object") {
+
+        saveSettings(normalizeImportedSettings(settings));
+
+        results.settings = {
+            imported: true
+        };
+
+    } else {
+
+        results.settings = {
+            imported: false,
+            reason: "missing"
+        };
+
+    }
 
     return {
         imported_at: Date.now(),
-        mode,
         results
     };
 }
@@ -118,6 +136,17 @@ export async function resetAccount() {
         noteService.deleteAllNotes(),
         workspaceService.deleteAllWorkspaces()
     ]);
+
+    // reset settings too
+    saveSettings({
+        version: 1,
+        home: {
+            workspace_sort: "created-desc",
+            workspace_recent: []
+        },
+        editor: {},
+        appearance: {}
+    });
 
     return {
         reset_at: Date.now(),

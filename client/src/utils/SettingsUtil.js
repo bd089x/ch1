@@ -171,3 +171,33 @@ export function setWorkspaceSort(sort) {
         workspace_sort: sort
     });
 }
+
+/**
+ * Normalize imported settings safely.
+ *
+ * Ensures:
+ * - required structure exists
+ * - missing fields are filled with defaults
+ * - version is always valid
+ */
+export function normalizeImportedSettings(settings = {}) {
+
+    return {
+        version: settings.version || 1,
+
+        home: {
+            workspace_sort: "created-desc",
+            workspace_recent: [],
+            ...(settings.home || {})
+        },
+
+        editor: {
+            ...(settings.editor || {})
+        },
+
+        appearance: {
+            ...(settings.appearance || {})
+        }
+    };
+
+}

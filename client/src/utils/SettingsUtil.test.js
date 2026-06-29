@@ -218,3 +218,82 @@ describe("SettingsUtil", () => {
     });
 
 });
+
+// -----------------------------
+// normalizeImportedSettings
+// -----------------------------
+describe("normalizeImportedSettings", () => {
+
+    it("applies defaults when settings are empty", () => {
+
+        const result =
+            SettingsUtil.normalizeImportedSettings({});
+
+        expect(result).to.deep.equal({
+            version: 1,
+            home: {
+                workspace_sort: "created-desc",
+                workspace_recent: []
+            },
+            editor: {},
+            appearance: {}
+        });
+
+    });
+
+    it("merges partial home settings correctly", () => {
+
+        const result =
+            SettingsUtil.normalizeImportedSettings({
+                home: {
+                    workspace_sort: "title-asc"
+                }
+            });
+
+        expect(result.home.workspace_sort)
+            .to.equal("title-asc");
+
+        expect(result.home.workspace_recent)
+            .to.deep.equal([]);
+
+    });
+
+    it("preserves provided nested settings", () => {
+
+        const result =
+            SettingsUtil.normalizeImportedSettings({
+                home: {
+                    workspace_sort: "title-desc",
+                    workspace_recent: ["a", "b"]
+                },
+                editor: {
+                    font_size: 14
+                },
+                appearance: {
+                    theme: "dark"
+                }
+            });
+
+        expect(result.home.workspace_recent)
+            .to.deep.equal(["a", "b"]);
+
+        expect(result.editor.font_size)
+            .to.equal(14);
+
+        expect(result.appearance.theme)
+            .to.equal("dark");
+
+    });
+
+    it("ensures version fallback when missing", () => {
+
+        const result =
+            SettingsUtil.normalizeImportedSettings({
+                version: undefined
+            });
+
+        expect(result.version).to.equal(1);
+
+    });
+
+});

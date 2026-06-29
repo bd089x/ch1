@@ -102,3 +102,39 @@ export function updateWorkspaceRecord(existing, data = {}) {
     return updated;
 
 }
+
+/**
+ * Restore a workspace record from persisted/exported data.
+ *
+ * This is used for:
+ * - import/export
+ * - syncing
+ * - backups
+ *
+ * It does NOT apply creation defaults or heavy normalization
+ * beyond ensuring minimal safety.
+ */
+export function restoreWorkspaceRecord(data = {}) {
+
+    return {
+        workspace_id:
+            data.workspace_id ?? crypto.randomUUID(),
+
+        workspace_title:
+            typeof data.workspace_title === "string"
+                ? data.workspace_title
+                : "Untitled",
+
+        workspace_tags:
+            Array.isArray(data.workspace_tags)
+                ? data.workspace_tags
+                : normalizeTags(data.workspace_tags || []),
+
+        workspace_created_at:
+            data.workspace_created_at ?? Date.now(),
+
+        workspace_updated_at:
+            data.workspace_updated_at ?? Date.now()
+    };
+
+}

@@ -5,7 +5,8 @@ import {
     normalizeTags,
     sortWorkspaces,
     buildWorkspace,
-    updateWorkspaceRecord
+    updateWorkspaceRecord,
+    restoreWorkspaceRecord
 } from "./WorkspaceDomain.js";
 
 describe("WorkspaceDomain", () => {
@@ -191,6 +192,93 @@ describe("WorkspaceDomain", () => {
             expect(updated.workspace_tags).to.deep.equal(["old"]);
 
         });
+
+    });
+
+});
+
+// -----------------------------
+// restoreWorkspaceRecord
+// -----------------------------
+describe("restoreWorkspaceRecord", () => {
+
+    it("restores a full workspace exactly", () => {
+
+        const input = {
+            workspace_id: "ws-1",
+            workspace_title: "My Workspace",
+            workspace_tags: ["react", "js"],
+            workspace_created_at: 1000,
+            workspace_updated_at: 2000
+        };
+
+        const result = restoreWorkspaceRecord(input);
+
+        expect(result).to.deep.equal(input);
+
+    });
+
+    it("generates id when missing", () => {
+
+        const result = restoreWorkspaceRecord({
+            workspace_title: "My Workspace",
+            workspace_tags: ["react"]
+        });
+
+        expect(result.workspace_id)
+            .to.be.a("string");
+
+        expect(result.workspace_id.length)
+            .to.be.greaterThan(0);
+
+    });
+
+    it("defaults title when invalid", () => {
+
+        const result = restoreWorkspaceRecord({
+            workspace_id: "1",
+            workspace_title: null
+        });
+
+        expect(result.workspace_title)
+            .to.equal("Untitled");
+
+    });
+
+    it("preserves provided tags when valid", () => {
+
+        const result = restoreWorkspaceRecord({
+            workspace_tags: ["a", "b"]
+        });
+
+        expect(result.workspace_tags)
+            .to.deep.equal(["a", "b"]);
+
+    });
+
+    it("normalizes tags when missing or invalid", () => {
+
+        const result = restoreWorkspaceRecord({
+            workspace_tags: null
+        });
+
+        expect(result.workspace_tags)
+            .to.be.an("array");
+
+    });
+
+    it("falls back timestamps when missing", () => {
+
+        const result = restoreWorkspaceRecord({
+            workspace_id: "1",
+            workspace_title: "Test"
+        });
+
+        expect(result.workspace_created_at)
+            .to.be.a("number");
+
+        expect(result.workspace_updated_at)
+            .to.be.a("number");
 
     });
 

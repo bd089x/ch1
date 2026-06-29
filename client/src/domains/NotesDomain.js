@@ -131,3 +131,24 @@ export function updateNoteRecord(
     };
 
 }
+
+export function restoreNoteRecord(data = {}) {
+
+    return {
+        note_id: data.note_id ?? crypto.randomUUID(),
+
+        note_content: data.note_content ?? "",
+
+        note_tags:
+            Array.isArray(data.note_tags)
+                ? data.note_tags
+                : extractTags(data.note_content ?? ""),
+
+        note_created_at:
+            data.note_created_at ?? Date.now(),
+
+        note_updated_at:
+            data.note_updated_at ?? Date.now()
+    };
+
+}

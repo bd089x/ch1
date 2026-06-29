@@ -1,5 +1,9 @@
 import { useNavigate } from "react-router-dom";
 
+import {
+    addRecentWorkspace
+} from "../utils/SettingsUtil";
+
 export default function WorkspaceCard({
     workspace
 }) {
@@ -13,6 +17,37 @@ export default function WorkspaceCard({
             month: "short",
             day: "numeric"
         });
+    };
+
+    /**
+     * OPEN WORKSPACE
+     */
+    const handleOpenWorkspace = () => {
+
+        addRecentWorkspace(workspace.workspace_id);
+
+        navigate(
+            `/editor/${(workspace.workspace_tags || []).join(",")}`
+        );
+
+    };
+
+    /**
+     * EDIT WORKSPACE
+     */
+    const handleEdit = () => {
+        navigate(
+            `/workspace/update/${workspace.workspace_id}`
+        );
+    };
+
+    /**
+     * DELETE WORKSPACE
+     */
+    const handleDelete = () => {
+        navigate(
+            `/workspace/delete/${workspace.workspace_id}`
+        );
     };
 
     return (
@@ -42,22 +77,14 @@ export default function WorkspaceCard({
 
                     <button
                         className="text-blue-400 text-sm"
-                        onClick={() =>
-                            navigate(
-                                `/workspace/update/${workspace.workspace_id}`
-                            )
-                        }
+                        onClick={handleEdit}
                     >
                         Edit
                     </button>
 
                     <button
                         className="text-red-400 text-sm"
-                        onClick={() =>
-                            navigate(
-                                `/workspace/delete/${workspace.workspace_id}`
-                            )
-                        }
+                        onClick={handleDelete}
                     >
                         Delete
                     </button>
@@ -72,11 +99,7 @@ export default function WorkspaceCard({
                     btn-outline
                     w-full
                 "
-                onClick={() =>
-                    navigate(
-                        `/editor/${(workspace.workspace_tags || []).join(",")}`
-                    )
-                }
+                onClick={handleOpenWorkspace}
             >
                 Open Workspace
             </button>

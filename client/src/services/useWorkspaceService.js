@@ -6,7 +6,8 @@ import {
 import {
     sortWorkspaces,
     buildWorkspace,
-    updateWorkspaceRecord
+    updateWorkspaceRecord,
+    restoreWorkspaceRecord
 } from "../domains/WorkspaceDomain";
 
 /**
@@ -174,6 +175,37 @@ export async function deleteAllWorkspaces() {
         request.onsuccess = () => resolve(true);
 
         request.onerror = () => reject(request.error);
+
+    });
+
+}
+
+/**
+ * Restore workspace (used for import/export or syncing).
+ *
+ * Unlike createWorkspace:
+ * - preserves workspace_id
+ * - preserves timestamps
+ * - does NOT re-generate or re-normalize aggressively
+ */
+export async function restoreWorkspace(data = {}) {
+
+    const { store } = await getStore(
+        WORKSPACE_STORE,
+        "readwrite"
+    );
+
+    const workspace = restoreWorkspaceRecord(data);
+
+    return new Promise((resolve, reject) => {
+
+        const request = store.put(workspace);
+
+        request.onsuccess = () =>
+            resolve(workspace);
+
+        request.onerror = () =>
+            reject(request.error);
 
     });
 
