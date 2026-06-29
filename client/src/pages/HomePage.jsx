@@ -95,7 +95,7 @@ export default function Home() {
             onClick: toggleDateSort
         },
         {
-            label: `Title ${workspaceSort.startsWith("name")
+            label: `Title ${workspaceSort.startsWith("title")
                 ? (workspaceSort === "title-asc" ? "↑" : "↓")
                 : ""}`,
             onClick: toggleTitleSort
