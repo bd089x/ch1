@@ -57,6 +57,21 @@ export default function Settings() {
 
     };
 
+    const formatFileTimestamp = (date = new Date()) => {
+
+    const pad = (n) => String(n).padStart(2, "0");
+
+    return (
+        `${date.getFullYear()}-` +
+        `${pad(date.getMonth() + 1)}-` +
+        `${pad(date.getDate())}_` +
+        `${pad(date.getHours())}-` +
+        `${pad(date.getMinutes())}-` +
+        `${pad(date.getSeconds())}`
+    );
+
+    };
+
     /**
      * EXPORT FULL ACCOUNT DATA (notes + workspaces)
      */
@@ -77,7 +92,7 @@ export default function Settings() {
 
             const a = document.createElement("a");
             a.href = url;
-            a.download = `chalk-account-backup-${Date.now()}.json`;
+            a.download = `chalk-account-backup-${formatFileTimestamp()}.json`;
             a.click();
 
             URL.revokeObjectURL(url);

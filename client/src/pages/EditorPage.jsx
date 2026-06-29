@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import TopMenu from "../components/TopMenuComponent";
@@ -20,27 +20,24 @@ export default function Editor() {
     const { showLoading, hideLoading } = useLoading();
 
     const [notes, setNotes] = useState([]);
-
     const [sortMode, setSortMode] = useState("created-desc");
 
     /**
      * Parse route tags → normalized array
      */
-    const tagList = useMemo(() => {
-        if (!tags) return [];
-
-        return tags
+    const tagList = tags
+        ? tags
             .split(",")
             .map(tag =>
                 tag.trim().replace(/^#/, "").toLowerCase()
             )
-            .filter(Boolean);
-    }, [tags]);
+            .filter(Boolean)
+        : [];
 
     /**
-     * LOAD NOTES (workspace view)
+     * LOAD NOTES
      */
-    const loadWorkspace = useCallback(async () => {
+    async function loadWorkspace() {
 
         showLoading("Loading workspace...");
 
@@ -58,8 +55,7 @@ export default function Editor() {
             } else {
 
                 /**
-                 * CASE 2: tag filtering via IndexedDB
-                 * (intersection logic preserved)
+                 * CASE 2: intersection of tagged notes
                  */
                 const groups = await Promise.all(
                     tagList.map(tag => getNotesByTag(tag))
@@ -80,7 +76,7 @@ export default function Editor() {
                 }, []);
 
                 /**
-                 * Local sort fallback (filtered sets)
+                 * Local sort for filtered results
                  */
                 data.sort((a, b) => {
 
@@ -95,25 +91,31 @@ export default function Editor() {
             setNotes(data);
 
         } finally {
+
             hideLoading();
+
         }
+    }
 
-    }, [tagList, sortMode, showLoading, hideLoading]);
-
+    /**
+     * Reload whenever route tags or sort order changes.
+     */
     useEffect(() => {
         loadWorkspace();
-    }, [loadWorkspace]);
+    }, [tags, sortMode]);
 
     /**
      * TOGGLE SORT ORDER
      */
-    const toggleDateSort = () => {
+    function toggleDateSort() {
+
         setSortMode(prev =>
             prev === "created-desc"
                 ? "created-asc"
                 : "created-desc"
         );
-    };
+
+    }
 
     const menuActions = [
         {
