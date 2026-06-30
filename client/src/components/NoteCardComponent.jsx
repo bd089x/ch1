@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import TextareaAutosize from "react-textarea-autosize";
 
 import {
     updateNote,
@@ -14,28 +15,12 @@ export default function NoteCard({
         note.note_content
     );
 
-    const textareaRef = useRef(null);
-
     /**
      * Keep local state in sync when switching notes
      */
     useEffect(() => {
         setContent(note.note_content || "");
     }, [note.note_id]);
-
-    /**
-     * Auto-resize textarea to fit content
-     */
-    const resizeTextarea = (el) => {
-        if (!el) return;
-
-        el.style.height = "auto";
-        el.style.height = el.scrollHeight + "px";
-    };
-
-    useEffect(() => {
-        resizeTextarea(textareaRef.current);
-    }, [content]);
 
     /**
      * Autosave (debounced)
@@ -90,23 +75,19 @@ export default function NoteCard({
 
             </div>
 
-            <textarea
-                ref={textareaRef}
+            <TextareaAutosize
                 className="
                     w-full
                     resize-none
+                    overflow-hidden
                     bg-black
                     text-white
                     outline-none
-                    overflow-hidden
                 "
                 value={content}
-                onChange={(e) => {
-                    setContent(e.target.value);
-                    resizeTextarea(e.target);
-                }}
+                onChange={(e) => setContent(e.target.value)}
                 spellCheck={false}
-                rows={1}
+                minRows={1}
             />
 
         </div>

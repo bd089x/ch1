@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import TextareaAutosize from "react-textarea-autosize";
+
 import { createNote } from "../composites/useNoteComposite";
 
 export default function NewNote({
@@ -9,19 +11,12 @@ export default function NewNote({
     const [content, setContent] = useState("");
 
     const contentRef = useRef(content);
-    const textareaRef = useRef(null);
 
+    /**
+     * Keep latest content available for unmount save
+     */
     useEffect(() => {
         contentRef.current = content;
-    }, [content]);
-
-    // Auto-grow textarea
-    useEffect(() => {
-        if (!textareaRef.current) return;
-
-        textareaRef.current.style.height = "0px";
-        textareaRef.current.style.height =
-            `${textareaRef.current.scrollHeight}px`;
     }, [content]);
 
     const extractTags = (text) => {
@@ -68,9 +63,12 @@ export default function NewNote({
             : cleanText;
     };
 
+    /**
+     * Manual save
+     */
     const handleSave = async () => {
 
-        const finalContent = buildFinalContent(content);
+        const finalContent = buildFinalContent(contentRef.current);
         if (!finalContent) return;
 
         await createNote({
@@ -79,6 +77,7 @@ export default function NewNote({
 
         setContent("");
         onCreated?.();
+
     };
 
     /**
@@ -121,8 +120,7 @@ export default function NewNote({
                 ))}
             </div>
 
-            <textarea
-                ref={textareaRef}
+            <TextareaAutosize
                 className="
                     w-full
                     resize-none
@@ -135,7 +133,7 @@ export default function NewNote({
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Write a new note..."
                 spellCheck={false}
-                rows={1}
+                minRows={1}
             />
 
             <div className="flex justify-end mt-3">
