@@ -1,3 +1,7 @@
+- adding a trash can for old notes to delete at a later date
+
+#advanced #ocia
+__
 - adding consistent shapes for requests and responses for api
 __
 - developing a settings system, integrated into export, import ❤️
