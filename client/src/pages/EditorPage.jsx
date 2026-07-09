@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import TopMenu from "../components/TopMenuComponent";
 import NewNote from "../components/NewNoteComponent";
 import NoteCard from "../components/NoteCardComponent";
+import TagExplorer from "../components/TagExplorerComponent";
 
 import {
     getAllNotes,
@@ -86,6 +87,7 @@ export default function Editor() {
 
                     return b.note_created_at - a.note_created_at;
                 });
+
             }
 
             setNotes(data);
@@ -95,6 +97,7 @@ export default function Editor() {
             hideLoading();
 
         }
+
     }
 
     /**
@@ -129,13 +132,18 @@ export default function Editor() {
     ];
 
     return (
-        <div className="flex flex-col h-screen p-4 gap-4">
+        <div className="flex flex-col p-4 gap-4">
 
             <TopMenu actions={menuActions} />
 
             <NewNote
                 tags={tagList}
                 onCreated={loadWorkspace}
+            />
+
+            <TagExplorer
+                notes={notes}
+                selectedTags={tagList}
             />
 
             {notes.map(note => (
@@ -148,4 +156,5 @@ export default function Editor() {
 
         </div>
     );
+
 }
