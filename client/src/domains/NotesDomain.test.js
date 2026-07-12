@@ -4,6 +4,7 @@ import { expect } from "chai";
 import {
     extractTags,
     sortNotes,
+    paginateNotes,
     countTags,
     buildNote,
     updateNoteRecord,
@@ -59,6 +60,111 @@ describe("NoteDomain", () => {
 
             expect(result.map(n => n.note_created_at))
                 .to.deep.equal([1, 2, 3]);
+
+        });
+
+    });
+
+        // -----------------------------
+    // paginateNotes
+    // -----------------------------
+    describe("paginateNotes", () => {
+
+        const notes = [
+            { note_id: 1 },
+            { note_id: 2 },
+            { note_id: 3 },
+            { note_id: 4 },
+            { note_id: 5 }
+        ];
+
+
+        it("returns the requested page of notes", () => {
+
+            const result = paginateNotes(
+                notes,
+                2,
+                2
+            );
+
+            expect(result.notes)
+                .to.deep.equal([
+                    { note_id: 3 },
+                    { note_id: 4 }
+                ]);
+
+        });
+
+
+        it("returns pagination metadata", () => {
+
+            const result = paginateNotes(
+                notes,
+                1,
+                2
+            );
+
+            expect(result.page)
+                .to.equal(1);
+
+            expect(result.pageSize)
+                .to.equal(2);
+
+            expect(result.total)
+                .to.equal(5);
+
+            expect(result.totalPages)
+                .to.equal(3);
+
+        });
+
+
+        it("returns the final partial page", () => {
+
+            const result = paginateNotes(
+                notes,
+                3,
+                2
+            );
+
+            expect(result.notes)
+                .to.deep.equal([
+                    { note_id: 5 }
+                ]);
+
+        });
+
+
+        it("returns empty notes when page exceeds available pages", () => {
+
+            const result = paginateNotes(
+                notes,
+                10,
+                2
+            );
+
+            expect(result.notes)
+                .to.deep.equal([]);
+
+        });
+
+
+        it("handles empty note arrays", () => {
+
+            const result = paginateNotes(
+                [],
+                1,
+                50
+            );
+
+            expect(result.notes)
+                .to.deep.equal([]);
+
+            expect(result.total)
+                .to.equal(0);
+
+            expect(result.totalPages)
+                .to.equal(0);
 
         });
 

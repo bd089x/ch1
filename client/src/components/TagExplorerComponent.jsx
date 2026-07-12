@@ -1,64 +1,134 @@
-import { useMemo } from "react";
+import {
+    useEffect,
+    useMemo,
+    useState
+} from "react";
+
 import { useNavigate } from "react-router-dom";
 
+import {
+    getAllTags,
+    getNotesByTag
+} from "../composites/useNoteComposite";
+
+import {
+    countTags
+} from "../domains/NotesDomain";
+
 export default function TagExplorer({
-    notes = [],
     selectedTags = []
 }) {
 
     const navigate = useNavigate();
 
+    const [tags, setTags] = useState([]);
+
+    const [loading, setLoading] = useState(true);
+
     /**
-     * Count tag usage within the current note set.
+     * Load tags from current context.
      */
-    const tags = useMemo(() => {
+    useEffect(() => {
 
-        const counts = new Map();
+        let mounted = true;
 
-        for (const note of notes) {
+        async function loadTags() {
 
-            for (const tag of note.note_tags || []) {
+            setLoading(true);
+            setTags([]);
 
-                counts.set(
-                    tag,
-                    (counts.get(tag) || 0) + 1
+            let result = [];
+
+            /**
+             * No active tags.
+             *
+             * Use global tag counts.
+             */
+            if (selectedTags.length === 0) {
+
+                result = await getAllTags();
+
+            } else {
+
+                /**
+                 * Active tags.
+                 *
+                 * Find notes matching all selected tags,
+                 * then count tags inside that context.
+                 */
+                const groups = await Promise.all(
+                    selectedTags.map(tag =>
+                        getNotesByTag(tag)
+                    )
                 );
+
+                const notes = groups.reduce((acc, current, index) => {
+
+                    if (index === 0) {
+                        return current;
+                    }
+
+                    const ids = new Set(
+                        current.map(note => note.note_id)
+                    );
+
+                    return acc.filter(note =>
+                        ids.has(note.note_id)
+                    );
+
+                }, []);
+
+                result = countTags(notes);
+
+            }
+
+            if (mounted) {
+
+                setTags(result);
+
+                setLoading(false);
 
             }
 
         }
 
-        return [...counts.entries()]
-            .sort((a, b) => {
+        loadTags();
 
-                /**
-                 * Selected tags first.
-                 */
-                const aSelected = selectedTags.includes(a[0]);
-                const bSelected = selectedTags.includes(b[0]);
+        return () => {
+            mounted = false;
+        };
 
-                if (aSelected !== bSelected) {
-                    return aSelected ? -1 : 1;
-                }
-
-                /**
-                 * Then by frequency.
-                 */
-                if (b[1] !== a[1]) {
-                    return b[1] - a[1];
-                }
-
-                /**
-                 * Finally alphabetically.
-                 */
-                return a[0].localeCompare(b[0]);
-
-            });
-
-    }, [notes, selectedTags]);
+    }, [selectedTags.join(",")]);
 
     /**
-     * Toggle a tag in the current route.
+     * Sort tags.
+     */
+    const sortedTags = useMemo(() => {
+
+        return [...tags].sort((a, b) => {
+
+            const aSelected =
+                selectedTags.includes(a.tag);
+
+            const bSelected =
+                selectedTags.includes(b.tag);
+
+            if (aSelected !== bSelected) {
+                return aSelected ? -1 : 1;
+            }
+
+            if (b.count !== a.count) {
+                return b.count - a.count;
+            }
+
+            return a.tag.localeCompare(b.tag);
+
+        });
+
+    }, [tags, selectedTags]);
+
+    /**
+     * Toggle tag in route.
      */
     function toggleTag(tag) {
 
@@ -66,11 +136,16 @@ export default function TagExplorer({
 
         if (selectedTags.includes(tag)) {
 
-            next = selectedTags.filter(t => t !== tag);
+            next = selectedTags.filter(
+                t => t !== tag
+            );
 
         } else {
 
-            next = [...selectedTags, tag];
+            next = [
+                ...selectedTags,
+                tag
+            ];
 
         }
 
@@ -80,14 +155,12 @@ export default function TagExplorer({
 
         } else {
 
-            navigate(`/editor/${next.join(",")}`);
+            navigate(
+                `/editor/${next.join(",")}`
+            );
 
         }
 
-    }
-
-    if (tags.length === 0) {
-        return null;
     }
 
     return (
@@ -106,9 +179,31 @@ export default function TagExplorer({
             "
         >
 
-            {tags.map(([tag, count]) => {
+            {loading && (
 
-                const active = selectedTags.includes(tag);
+                <button
+                    disabled
+                    className="
+                        flex-shrink-0
+                        px-4 py-2
+                        rounded-full
+                        border
+                        text-sm
+                        font-medium
+                        bg-zinc-900
+                        text-zinc-400
+                        border-zinc-700
+                    "
+                >
+                    Loading...
+                </button>
+
+            )}
+
+            {!loading && sortedTags.map(({ tag, count }) => {
+
+                const active =
+                    selectedTags.includes(tag);
 
                 return (
 

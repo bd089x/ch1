@@ -1,3 +1,7 @@
+As far as logical integrity, I'd probably, formalize both the parameter shapes and the api return shapes, as we've done in the past. Combined with moving the loading spinner events, to a hook that can handle, api calls to indexDB and manage UI events.
+
+#formalizing #api
+__
 Once we've perfected Chalk, as a base app, we'll build another project, that can act as a test bed for unstable new features that we'd like to eventually add to Chalk. Ocia will be it's title.
 
 #chalk #ocia

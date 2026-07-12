@@ -18,6 +18,42 @@ export function extractTags(text = "") {
     ];
 }
 
+ /**
+  * Paginate notes.
+  *
+  * Example:
+  * page 1, size 50 -> notes 0-49
+  * page 2, size 50 -> notes 50-99
+  */
+export function paginateNotes(
+    notes = [],
+    page = 1,
+    pageSize = 50
+) {
+
+    const start =
+        (page - 1) * pageSize;
+
+    const end =
+        start + pageSize;
+
+    return {
+        notes: notes.slice(start, end),
+
+        page,
+
+        pageSize,
+
+        total:
+            notes.length,
+
+        totalPages:
+            Math.ceil(notes.length / pageSize)
+
+    };
+
+}
+
 /**
  * Sort notes.
  */

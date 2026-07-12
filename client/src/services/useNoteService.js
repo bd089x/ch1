@@ -8,7 +8,8 @@ import {
     countTags,
     sortNotes,
     updateNoteRecord,
-    restoreNoteRecord
+    restoreNoteRecord,
+    paginateNotes
 } from "../domains/NotesDomain";
 
 import {
@@ -82,7 +83,12 @@ export async function getNote(note_id) {
 /**
  * Get notes by tag.
  */
-export async function getNotesByTag(tag, sort = "created-desc") {
+export async function getNotesByTag(
+    tag,
+    sort = "created-desc",
+    page = null,
+    pageSize = 50
+) {
 
     const { store } = await getStore(
         NOTE_STORE,
@@ -99,10 +105,29 @@ export async function getNotesByTag(tag, sort = "created-desc") {
 
         request.onsuccess = () => {
 
+            const notes = sortNotes(
+                request.result || [],
+                sort
+            );
+
+            /**
+             * No pagination requested.
+             *
+             * Preserve existing behavior.
+             */
+            if (page === null) {
+
+                resolve(notes);
+
+                return;
+
+            }
+
             resolve(
-                sortNotes(
-                    request.result || [],
-                    sort
+                paginateNotes(
+                    notes,
+                    page,
+                    pageSize
                 )
             );
 
